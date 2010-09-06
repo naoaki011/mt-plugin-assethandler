@@ -10,3 +10,5 @@ sub is_blog_context {
         return 1;
     }
 }
+
+1;

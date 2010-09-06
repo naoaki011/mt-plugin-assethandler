@@ -32,7 +32,7 @@ sub open_batch_editor {
         if ( -f $row->{file_path} ) {
             my @stat = stat( $row->{file_path} );
             my $size = $stat[7];
-            my ($thumb_file) = $obj->thumbnail_url( Height => 240, Width => 350 );
+            my ($thumb_file) = $obj->thumbnail_url( Height => 220, Width => 300 );
             $row->{thumbnail_url} = $meta->{thumbnail_url} = $thumb_file;
             $row->{asset_class} = $obj->class_label;
             $row->{file_size}   = $size;

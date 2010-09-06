@@ -1,4 +1,4 @@
-package AssHAT::App::CMS;
+package AssetHandler::App::CMS;
 use strict;
 
 use MT::Util qw( format_ts relative_date ); 
@@ -7,7 +7,7 @@ use MT 4;
 
 sub open_batch_editor {
     my ($app) = @_;
-    my $plugin = MT->component('AssHAT');
+    my $plugin     = MT->component('AssetHandler');
     
     my @ids = $app->param('id');
     my $blog_id = $app->param('blog_id');
@@ -89,7 +89,7 @@ sub open_batch_editor {
 
 sub save_assets {
     my ($app) = @_;
-    my $plugin = MT->component('AssHAT');
+    my $plugin     = MT->component('AssetHandler');
     
     my @ids = $app->param('id');
     my $blog_id = $app->param('blog_id');
@@ -119,7 +119,7 @@ sub save_assets {
 
 sub start_transporter {
     my ($app) = @_;    
-    my $plugin = MT->component('AssHAT');
+    my $plugin = MT->component('AssetHandler');
     return $app->build_page($plugin->load_tmpl('transporter.tmpl'));
 }
 
@@ -134,7 +134,7 @@ sub transport {
     my $blog    = MT::Blog->load($blog_id);
     my $path    = $q->param('path');
     my $url     = $q->param('url');
-    my $plugin  = MT->component('AssHAT');
+    my $plugin  = MT->component('AssetHandler');
     
     my $param   = {
         blog_id   => $blog_id,

@@ -10,19 +10,26 @@
 </mt:setvarblock>
 <mt:setvarblock name="html_head" append="1">
     <style type="text/css">
-        #as-file-name, .as-file-name { width: 25%; }
+        #as-file-name, .as-file-name { width: 25%; overflow: hidden; }
         #as-asset-name, .as-asset-name { width: 25%; }
         .field { border: 0; margin: 5px 0 5px; }
+        .as-asset-deets input[type="text"],
+        .as-asset-deets textarea { width: 95%; }
+        .plugin-actions { display: none; }
+        #asset-listing-table .status-missing {
+            background: url("<mt:var name="static_uri">images/status_icons/warning.gif") no-repeat scroll left center transparent;
+            margin-left: 5px;
+            padding-left: 10px;
+        }
     </style>    
 </mt:setvarblock>
 <mt:setvarblock name="action_buttons">
-    <a href="javascript:void(0)" mt:command="submit" mt:mode="save_assets" accesskey="s"
+    <button mt:command="submit" mt:mode="save_assets" accesskey="s"
         title="<__trans phrase="Save these [_1] (s)" params="<mt:var name="object_label_plural" lower_case="1">">"
-        ><__trans phrase="Save"></a>
+        ><__trans phrase="Save"></button>
 </mt:setvarblock>
 
 <mt:include name="include/header.tmpl" id="header_include">
-<script type="text/javascript" src="<mt:var name="static_uri">js/assetdetail.js"></script>
 
 <mtapp:listing>
     <mt:if __first__>
@@ -41,7 +48,7 @@
     <mt:unless name="file_is_missing">
                     <img src="<$mt:var name="thumbnail_url"$>" />
     <mt:else>
-                    <$mt:var name="file_label" escape="html" default="$file_name"$>
+                    <$mt:var name="file_label" escape="html" default="$file_name"$><span class="status-missing">(<__trans phrase="Asset Missing">)</span>
     </mt:unless>
                     <div id="asset-<mt:var name="id">-preview" class="asset-preview">
                         <div id="asset-<mt:var name="id">-preview-inner" class="asset-preview-inner"></div>

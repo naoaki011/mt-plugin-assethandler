@@ -368,12 +368,6 @@ sub list_asset_src {
 HTML
         $$tmpl =~ s/($old)/$new\n$1/;
     }
-    
-    # Add import link
-    # $old = q{<$mt:var name="list_filter_form"$>};
-    # $old = quotemeta($old);
-    # $new = q{<p id="create-new-link"><a class="icon-left icon-create" onclick="return openDialog(null, 'start_asshat_transporter', 'blog_id=<mt:var name="blog_id">')" href="javascript:void(0)"><__trans phrase="Import Assets"></a></p>};
-    # $$tmpl =~ s/($old)/$new\n$1/;
 }
 
 1;

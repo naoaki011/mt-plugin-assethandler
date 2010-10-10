@@ -7,7 +7,7 @@ name: AssetHandler
 key: AssetHandler
 id: AssetHandler
 l10n_class: AssetHandler::L10N
-version: 1.0
+version: 2.01
 author_name: Arvind Satyanarayan
 author_link: http://www.movalog.com/
 plugin_link: http://plugins.movalog.com/asshat/

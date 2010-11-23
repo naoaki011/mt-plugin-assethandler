@@ -237,8 +237,13 @@ sub _process_transport {
             )
         )
     ) {
+        my $site_path = $blog->site_path;
+        $site_path    =~ s!\\!/!g;
+        my $file_path = $local_file;
+        $file_path    =~ s!\\!/!g;
+        $file_path    =~ s!$site_path!%r!;
         $asset = $asset_pkg->new();
-        $asset->file_path($local_file);
+        $asset->file_path($file_path);
         $asset->file_name($local_basename);
         $asset->file_ext($ext);
         $asset->blog_id($blog_id);
@@ -247,6 +252,11 @@ sub _process_transport {
         $asset->modified_by( $app->user->id );
     }
     my $original = $asset->clone;
+
+    my $site_url = $blog->site_url;
+    $url =~ s!\\!/!g;
+    $url =~ s!$site_url!%r/!;
+
     $asset->url($url);
     if ($is_image) {
         $asset->image_width($w);

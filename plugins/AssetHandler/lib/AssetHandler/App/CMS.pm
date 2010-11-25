@@ -3,7 +3,7 @@ package AssetHandler::App::CMS;
 use strict;
 use warnings;
 use MT::Util qw( format_ts relative_date caturl );
-use MT 5.0;
+use MT 4.0;
 use File::Spec;
 
 sub open_batch_editor {

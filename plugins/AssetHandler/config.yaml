@@ -26,12 +26,22 @@ applications:
                     dialog: start_asshat_transporter
                     condition: $AssetHandler::AssetHandler::Util::is_blog_context
                     order: 1000
+#                find_duplicated_assets:
+#                    label: Find Duplicated
+#                    dialog: find_duplicated_assets
+#                    condition: $AssetHandler::AssetHandler::Util::is_blog_context
+#                    order: 1000
             list_assets:
                 transport_assets:
                     label: Import Assets
                     dialog: start_asshat_transporter
                     condition: $AssetHandler::AssetHandler::Util::is_blog_context
                     order: 1000
+#                find_duplicated_assets:
+#                    label: Find Duplicated
+#                    dialog: find_duplicated_assets
+#                    condition: $AssetHandler::AssetHandler::Util::is_blog_context
+#                    order: 1000
         list_actions:
             asset:
                 asshat_batch_editor:
@@ -39,6 +49,11 @@ applications:
                     code: $AssetHandler::AssetHandler::App::CMS::open_batch_editor
                     order: 300
                     condition: $AssetHandler::AssetHandler::Util::is_mt5
+                unlink:
+                    label: Unlink
+                    code: $AssetHandler::AssetHandler::App::CMS::unlink_asset
+                    order: 300
+                    condition: $AssetHandler::AssetHandler::Util::is_blog_context
         methods:
             asshat_batch_editor: $AssetHandler::AssetHandler::App::CMS::open_batch_editor
             save_assets: $AssetHandler::AssetHandler::App::CMS::save_assets

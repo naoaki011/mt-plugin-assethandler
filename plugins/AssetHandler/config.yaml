@@ -38,13 +38,18 @@ applications:
                     label: Batch Edit Assets
                     code: $AssetHandler::AssetHandler::App::CMS::open_batch_editor
                     order: 300
-                    condition: $AssetHandler::AssetHandler::Util::is_blog_context
+                    condition: $AssetHandler::AssetHandler::Util::is_mt5
         methods:
             asshat_batch_editor: $AssetHandler::AssetHandler::App::CMS::open_batch_editor
             save_assets: $AssetHandler::AssetHandler::App::CMS::save_assets
             start_asshat_transporter: $AssetHandler::AssetHandler::App::CMS::start_transporter
             asshat_transport_assets: $AssetHandler::AssetHandler::App::CMS::transport
-
+        menus:
+            asset:asset_import:
+                label: Import
+                order: 300
+                mode: start_asshat_transporter
+                condition: $AssetHandler::AssetHandler::Util::is_illiad
 list_properties:
     asset:
         url:

@@ -52,6 +52,12 @@ applications:
                 condition: $AssetHandler::AssetHandler::Util::is_illiad
 list_properties:
     asset:
+        associated_objects:
+            label: Associated Objects
+            order : 1000
+            display: optional
+#            col_class: assoc_objects
+            bulk_html: $AssetHandler::AssetHandler::App::CMS::assoc_bulk_html
         url:
             auto: 1
             display: none
@@ -59,3 +65,17 @@ list_properties:
         mime_type:
             auto: 1
             label: MIME Media Type
+#        not_associated_objects:
+#            base: __virtual.hidden
+#            label: Asset associated with no objects
+#            display: none
+#            terms: $AssetHandler::AssetHandler::App::CMS::no_assoc_terms
+#            singleton: 1
+#system_filters:
+#  asset:
+#    no_assoc:
+#      filter_editable: 0
+#      label: Asset associated with no objects
+#      items:
+#        - type: not_associated_objects
+#      order: 1000

@@ -1,1 +1,1 @@
-# AssetHandler plugin for Movable Type 5.0 #
+# AssetHandler plugin for Movable Type 5.1 #

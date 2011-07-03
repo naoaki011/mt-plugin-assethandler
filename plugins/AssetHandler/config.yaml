@@ -47,6 +47,10 @@ applications:
 
 list_properties:
     asset:
+        url:
+            auto: 1
+            display: none
+            label: URL
         mime_type:
             auto: 1
             label: MIME Media Type

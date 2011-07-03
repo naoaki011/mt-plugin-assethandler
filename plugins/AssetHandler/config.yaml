@@ -26,10 +26,6 @@ applications:
                     dialog: start_asshat_transporter
                     condition: $AssetHandler::AssetHandler::Util::is_blog_context
                     order: 1000
-            # The following is necessary because both list_asset and
-            # list_assets are supported modes but the page actions do
-            # not work on one page if only defined for one mode.
-            # See http://bugs.movabletype.org/?82475
             list_assets:
                 transport_assets:
                     label: Import Assets
@@ -53,4 +49,4 @@ list_properties:
     asset:
         mime_type:
             auto: 1
-            label: mime
+            label: MIME Media Type

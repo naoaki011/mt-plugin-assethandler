@@ -16,7 +16,8 @@ description: <__trans phrase="AssetHandler allows you to mass import and manage 
 
 callbacks:
     MT::App::CMS::template_source.list_asset: $AssetHandler::AssetHandler::App::CMS::list_asset_src
-
+#    MT::App::CMS::template_source.asset_table: $AssetHandler::AssetHandler::App::CMS::asset_table
+#    app_pre_listing_list_asset: $AssetHandler::AssetHandler::App::CMS::list_asset
 applications:
     cms:
         page_actions:
@@ -25,37 +26,40 @@ applications:
                     label: Import Assets
                     dialog: start_asshat_transporter
                     condition: $AssetHandler::AssetHandler::Util::is_blog_context
-                    order: 1000
 #                find_duplicated_assets:
 #                    label: Find Duplicated
 #                    dialog: find_duplicated_assets
 #                    condition: $AssetHandler::AssetHandler::Util::is_blog_context
-#                    order: 1000
             list_assets:
                 transport_assets:
                     label: Import Assets
                     dialog: start_asshat_transporter
                     condition: $AssetHandler::AssetHandler::Util::is_blog_context
-                    order: 1000
 #                find_duplicated_assets:
 #                    label: Find Duplicated
 #                    dialog: find_duplicated_assets
 #                    condition: $AssetHandler::AssetHandler::Util::is_blog_context
-#                    order: 1000
         list_actions:
             asset:
-                asshat_batch_editor:
+                batch_editor:
                     label: Batch Edit Assets
                     code: $AssetHandler::AssetHandler::App::CMS::open_batch_editor
-                    order: 300
                     condition: $AssetHandler::AssetHandler::Util::is_mt5
                 unlink:
                     label: Unlink
                     code: $AssetHandler::AssetHandler::App::CMS::unlink_asset
-                    order: 300
                     condition: $AssetHandler::AssetHandler::Util::is_blog_context
+                fix_path_tor:
+                    label: Path to %r
+                    code: $AssetHandler::AssetHandler::App::CMS::path_tor
+                    condition: $AssetHandler::AssetHandler::Util::is_mt5
+                fix_path_tofull:
+                    label: Flatten Path
+                    code: $$AssetHandler::AssetHandler::App::CMS::flatten_path
+                    condition: $AssetHandler::AssetHandler::Util::is_mt5
         methods:
             asshat_batch_editor: $AssetHandler::AssetHandler::App::CMS::open_batch_editor
+            asshat_batch_editor_listing: $AssetHandler::AssetHandler::App::CMS::open_batch_editor_listing
             save_assets: $AssetHandler::AssetHandler::App::CMS::save_assets
             start_asshat_transporter: $AssetHandler::AssetHandler::App::CMS::start_transporter
             asshat_transport_assets: $AssetHandler::AssetHandler::App::CMS::transport
@@ -71,21 +75,60 @@ list_properties:
             label: Associated Objects
             order : 1000
             display: optional
-#            col_class: assoc_objects
             bulk_html: $AssetHandler::AssetHandler::App::CMS::assoc_bulk_html
         url:
             auto: 1
-            display: none
-            label: URL
+            display: optional
+            label: Link
+            col_class: image_link
+            filter_label: URL
+            html: >
+                sub {
+                    my ( $prop, $obj, $app ) = @_;
+                    my $url = $obj->url;
+                    my $out = qq{
+                        <a href="$url" class="show">Show</a>
+                    };
+                    return $out;
+                }
         mime_type:
             auto: 1
             label: MIME Media Type
+        parent:
+            auto: 1
+            label: ParentID
+            display: optional
+            html: >
+                sub {
+                    my ( $prop, $obj, $app ) = @_;
+                    my $parent_id = $obj->parent;
+                    my $blog_id = $obj->blog_id;
+                    my $out = qq{
+                        <a href="./mt.cgi?__mode=view&_type=asset&blog_id=$blog_id&id=$parent_id">$parent_id</a>
+                    };
+                    return $out;
+                }
 #        not_associated_objects:
 #            base: __virtual.hidden
 #            label: Asset associated with no objects
 #            display: none
 #            terms: $AssetHandler::AssetHandler::App::CMS::no_assoc_terms
 #            singleton: 1
+list_actions:
+    asset:
+        batch_editor:
+            label: Batch Edit Assets
+            code: $AssetHandler::AssetHandler::App::CMS::open_batch_editor
+            condition: $AssetHandler::AssetHandler::Util::is_illiad
+            no_prompt: 1
+        fix_path_tor:
+            label: Path to %r
+            code: $AssetHandler::AssetHandler::App::CMS::path_tor
+            condition: $AssetHandler::AssetHandler::Util::is_illiad
+        fix_path_tofull:
+            label: Flatten Path
+            code: $$AssetHandler::AssetHandler::App::CMS::flatten_path
+            condition: $AssetHandler::AssetHandler::Util::is_illiad
 #system_filters:
 #  asset:
 #    no_assoc:

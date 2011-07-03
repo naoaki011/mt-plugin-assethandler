@@ -19,6 +19,11 @@ use vars qw( %Lexicon );
 	'Importing files into assets in blog' => 'アイテムをブログにインポート中です。',
 	'File Name' => 'ファイル名',
 	'Import' => 'インポート',
+	'Unlink' => '登録削除',
+	'Associated Objects' => '関連記事',
+	'MIME Media Type' => 'MIMEタイプ',
+	'ParentID' => '親ID',
+	'Asset associated with no objects' => '関連付けされていないアイテム',
 );
 
 1;

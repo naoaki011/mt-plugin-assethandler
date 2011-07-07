@@ -104,6 +104,78 @@ sub save_assets {
     $app->call_return( saved => 1 );
 }
 
+sub open_batch_editor_listing {
+    my ($app) = @_;
+    my $plugin     = MT->component('AssetHandler');
+    my @ids = $app->param('id');
+    my $blog_id = $app->param('blog_id');
+    my $auth_prefs = $app->user->entry_prefs;
+    my $tag_delim  = chr( $auth_prefs->{tag_delim} );
+    require File::Basename;
+    require JSON;
+    # require MT::Author;
+    require MT::Tag;
+    my $hasher = sub {
+        my ( $obj, $row ) = @_;
+        my $blog = $obj->blog;
+        $row->{blog_name} = $blog ? $blog->name : '-';
+        $row->{file_path} = $obj->file_path; # has to be called to calculate
+        $row->{url} = $obj->url; # this has to be called to calculate
+        $row->{file_name} = File::Basename::basename( $row->{file_path} );
+        my $meta = $obj->metadata;
+        $row->{file_label} = $obj->label;
+        if ( -f $row->{file_path} ) {
+            my @stat = stat( $row->{file_path} );
+            my $size = $stat[7];
+            my ($thumb_file) =
+                $obj->thumbnail_url( Height => 220, Width => 300 );
+            $row->{thumbnail_url} = $meta->{thumbnail_url} = $thumb_file;
+            $row->{asset_class} = $obj->class_label;
+            $row->{file_size}   = $size;
+            if ( $size < 1024 ) {
+                $row->{file_size_formatted} = sprintf( "%d Bytes", $size );
+            }
+            elsif ( $size < 1024000 ) {
+                $row->{file_size_formatted} =
+                    sprintf( "%.1f KB", $size / 1024 );
+            }
+            else {
+                $row->{file_size_formatted} =
+                    sprintf( "%.1f MB", $size / 1024000 );
+            }
+        }
+        else {
+            $row->{file_is_missing} = 1;
+        }
+        my $ts = $obj->created_on;
+        $row->{metadata_json} = JSON::objToJson($meta);
+        my $tags = MT::Tag->join( $tag_delim, $obj->tags );
+        $row->{tags} = $tags;
+    };
+    require File::Spec;
+#    return $app->listing( {
+#            terms => { id => \@ids, blog_id => $app->param('blog_id') },
+#            args => { sort => 'created_on', direction => 'descend' },
+#            type => 'asset',
+#            code => $hasher,
+#            template => File::Spec->catdir(
+#                $plugin->path, 'tmpl', 'asset_batch_editor.tmpl'
+#            ),
+#            params => { (
+#                    $blog_id
+#                    ? ( blog_id      => $blog_id,
+#                        edit_blog_id => $blog_id,
+#                      ) 
+#                    : ( system_overview => 1 )
+#                ),
+#                saved => $app->param('saved') || 0,
+#                return_args => "__mode=list&_type=asset&blog_id=$blog_id"
+#            }
+#        }
+#    );
+
+}
+
 sub start_transporter {
     my ($app) = @_;    
     my $plugin = MT->component('AssetHandler');
@@ -674,60 +746,6 @@ sub unlink_asset {
 sub find_duplicated_assets {
     my ($app) = @_;
 
-}
-
-sub path_tor {
-    my ($app) = @_;
-    my $blog_id = $app->param('blog_id');
-    if ($blog_id) {
-        require MT::Blog;
-        my $blog = MT::Blog->load($blog_id);
-        my $site_path = $blog->site_path;
-        $site_path =~ s!\\!/!g;
-        my $site_url = $blog->site_url;
-        my @ids = $app->param('id');
-        require MT::Asset;
-        foreach my $id (@ids) {
-            my $asset = MT::Asset->load($id);
-            my $file_path = $asset->file_path;
-            $file_path =~ s!\\!/!g;
-            $file_path =~ s!$site_path!%r!;
-            $asset->file_path( $file_path );
-            my $file_url = $asset->url;
-            $file_url =~ s!\\!/!g;
-            $file_url =~ s!$site_url!%r/!;
-            $asset->url( $file_url );
-            $asset->save;
-        }
-        $app->call_return( saved => 1 );
-    }
-}
-
-sub flatten_path {
-    my ($app) = @_;
-    my $blog_id = $app->param('blog_id');
-    if ($blog_id) {
-        require MT::Blog;
-        my $blog = MT::Blog->load($blog_id);
-        my $site_path = $blog->site_path;
-        $site_path =~ s!\\!/!g;
-        my $site_url = $blog->site_url;
-        my @ids = $app->param('id');
-        require MT::Asset;
-        foreach my $id (@ids) {
-            my $asset = MT::Asset->load($id);
-            my $file_path = $asset->file_path;
-            $file_path =~ s!\\!/!g;
-            $file_path =~ s!%r!$site_path!;
-            $asset->file_path( $file_path );
-            my $file_url = $asset->url;
-            $file_url =~ s!\\!/!g;
-            $file_url =~ s!%r/!$site_url!;
-            $asset->url( $file_url );
-            $asset->save;
-        }
-        $app->call_return( saved => 1 );
-    }
 }
 
 sub doLog {

@@ -20,9 +20,10 @@ use vars qw( %Lexicon );
 	'File Name' => 'ファイル名',
 	'Import' => 'インポート',
 	'Unlink' => '登録削除',
+	'Batch Edit' => '一括編集',
 	'Associated Objects' => '関連記事',
 	'MIME Media Type' => 'MIMEタイプ',
-	'ParentID' => '親ID',
+	'Parent AssetID' => '親アイテムID',
 	'Asset associated with no objects' => '関連付けされていないアイテム',
 );
 

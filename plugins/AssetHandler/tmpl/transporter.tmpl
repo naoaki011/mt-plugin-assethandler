@@ -54,7 +54,8 @@
 <mt:include name="include/header.tmpl">
 
 <form method="post" enctype="multipart/form-data" action="<mt:var name="script_url">">
-    <input type="hidden" name="__mode" value="asshat_transport_assets" />
+    <input type="hidden" name="__mode" value="handle_transport_assets" />
+    <input type="hidden" name="magic_token" value="<mt:var name=MAGIC_TOKEN>" />
     <input type="hidden" name="blog_id" value="<mt:var name="blog_id">" />
 
     <mtapp:setting
@@ -79,6 +80,7 @@
         id="asset_category"
         label_class="top-label"
         label="<__trans phrase="Make Entry (with Category)">"
+        shown="0"
         show_hint="0">
         <div class="textarea-wrapper">
             <input type="checkbox" name="make_entry" value="1" class="select" <mt:if name="make_entry"> checked="checked"</mt:if> />
@@ -138,7 +140,7 @@
                 type="submit"
                 accesskey="s"
                 title="<__trans phrase="Continue (s)">"
-                class="primary-button action"
+                class="primary-button primary button action"
                 id="continue-button"
                 ><__trans phrase="Continue"></button>
             <mt:else>
@@ -146,12 +148,12 @@
                 type="submit"
                 accesskey="s"
                 title="<__trans phrase="Import (s)">"
-                class="primary-button action"
+                class="primary-button primary button action"
                 id="transport-button"
                 ><__trans phrase="Import"></button>
             </mt:if>
             <button
-                class="cancel action mt-close-dialog"
+                class="cancel button action mt-close-dialog"
                 type="submit"
                 accesskey="x"
                 title="<__trans phrase="Cancel (x)">"

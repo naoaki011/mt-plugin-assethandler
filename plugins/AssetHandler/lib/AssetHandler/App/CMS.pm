@@ -9,6 +9,47 @@ use File::Spec;
 use MT::Util qw( format_ts relative_date );
 use base qw( MT::Object );
 
+sub header_add_styles {
+    my ($cb, $app, $param, $tmpl) = @_;
+
+    return 1 if ($app->param('__mode') ne 'list');
+
+    my $heads = $tmpl->getElementsByTagName('setvarblock');
+    my $head;
+    foreach (@$heads) {
+        if ( $_->attributes->{name} =~ /html_head$/ ) {
+            $head = $_;
+            last;
+        }
+    }
+    return 1 unless $head;
+
+    require MT::Template;
+    bless $head, 'MT::Template::Node';
+    my $html_head = $tmpl->createElement( 'setvarblock',
+        { name => 'html_head', append => 1 } );
+    my $innerHTML = q{
+<style type="text/css">
+#asset-table th.parent {
+    display: table-cell;
+    width: 8em;
+}
+#asset-table th.class {
+    width: 8em;
+}
+#asset-table th.file_name {
+    width: 20em;
+}
+#asset-table th.tags {
+    width: 12em;
+}
+</style>
+};
+    $html_head->innerHTML($innerHTML);
+    $tmpl->insertBefore( $html_head, $head );
+    1;
+}
+
 sub open_batch_editor {
     my ($app) = @_;
     my $plugin     = MT->component('AssetHandler');
@@ -205,6 +246,7 @@ sub transport {
     my $path    = $q->param('path');
     $path       =~ s{\\}{/}g;
     my $url     = $q->param('url');
+    doLog($q->param('make_entry') . $q->param('asset_category'));
     my $plugin  = MT->component('AssetHandler');
     my $param   = {
         blog_id   => $blog_id,
@@ -468,6 +510,14 @@ sub list_asset {
         if ( $file_path && $fmgr->exists( $file_path ) ) {
             $row->{file_path} = $file_path;
             $row->{file_name} = File::Basename::basename( $file_path );
+
+            my $filename = File::Basename::basename( $file_path );
+            (my $tmp = $file_path) =~ s!^(.*)[/\\]$filename$!$1!;
+            $tmp =~ s!\\!/!g;
+            $site_path =~ s!\\!/!g;
+            $tmp =~ s!^$site_path(.*)$!$1!;
+            $row->{folder} = $tmp;
+
             my $size = $fmgr->file_size( $file_path );
             $row->{file_size} = $size;
             if ( $size < 1024 ) {
@@ -586,6 +636,7 @@ HERE
     my $new = <<HERE;
                 <th class="created-on"><__trans phrase="Created On"></th>
                 <th class="created-on"><__trans phrase="Appears in..."></th>
+                <th class="created-on"><__trans phrase="Folder"></th>
             </tr>
         </mt:setvarblock>
 HERE
@@ -619,6 +670,7 @@ HERE
         <span class="hint"><__trans phrase="This asset has not been used."></span>
     </mt:if>
                 </td>
+                <td><mt:var name="folder" /></td>
             </tr>
     <mt:if __last__>
         </tbody>

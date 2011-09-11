@@ -3,113 +3,360 @@
 # This program is distributed under the terms of the
 # GNU General Public License, version 2.
 # $Id$
+### Modified for MT5.1 or Later
+# By. Naoaki Onozaki
 name: AssetHandler
 key: AssetHandler
 id: AssetHandler
 l10n_class: AssetHandler::L10N
 version: 2.02
-author_name: Arvind Satyanarayan
-author_link: http://www.movalog.com/
-plugin_link: http://plugins.movalog.com/asshat/
-doc_link: http://plugins.movalog.com/asshat/
+author_name: Naoaki Onozaki
+author_link: http://www.zelazny.mydns.jp/
+plugin_link: https://github.com/naoaki011/mt-plugin-assethandler
 description: <__trans phrase="AssetHandler allows you to mass import and manage assets in Movable Type">
 
 callbacks:
-    MT::App::CMS::template_source.list_asset: $AssetHandler::AssetHandler::App::CMS::list_asset_src
-    MT::App::CMS::template_source.asset_table: $AssetHandler::AssetHandler::App::CMS::asset_table
-    app_pre_listing_list_asset: $AssetHandler::AssetHandler::App::CMS::list_asset
+  MT::App::CMS::template_source.list_asset: $AssetHandler::AssetHandler::App::CMS::list_asset_src
+  MT::App::CMS::template_source.asset_table: $AssetHandler::AssetHandler::App::CMS::asset_table
+  app_pre_listing_list_asset: $AssetHandler::AssetHandler::App::CMS::list_asset
+  template_param.header: $AssetHandler::AssetHandler::App::CMS::header_add_styles
 applications:
-    cms:
-        page_actions:
-            list_asset:
-                transport_assets:
-                    label: Import Assets
-                    dialog: start_asshat_transporter
-                    condition: $AssetHandler::AssetHandler::Util::is_blog_context
-            list_assets:
-                transport_assets:
-                    label: Import Assets
-                    dialog: start_asshat_transporter
-                    condition: $AssetHandler::AssetHandler::Util::is_blog_context
-        list_actions:
-            asset:
-                batch_editor:
-                    label: Batch Edit Assets
-                    code: $AssetHandler::AssetHandler::App::CMS::open_batch_editor
-                    condition: $AssetHandler::AssetHandler::Util::is_mt5
-                unlink:
-                    label: Unlink
-                    code: $AssetHandler::AssetHandler::App::CMS::unlink_asset
-                    condition: $AssetHandler::AssetHandler::Util::is_blog_context
-        methods:
-            asshat_batch_editor: $AssetHandler::AssetHandler::App::CMS::open_batch_editor
-            asshat_batch_editor_listing: $AssetHandler::AssetHandler::App::CMS::open_batch_editor_listing
-            save_assets: $AssetHandler::AssetHandler::App::CMS::save_assets
-            start_asset_transporter: $AssetHandler::AssetHandler::App::CMS::start_transporter
-            asshat_transport_assets: $AssetHandler::AssetHandler::App::CMS::transport
-        menus:
-            asset:import:
-                label: Import
-                order: 300
-                mode: start_asset_transporter
-                condition: $AssetHandler::AssetHandler::Util::is_illiad
-list_properties:
-    asset:
-        associated_objects:
-            label: Associated Objects
-            order : 1000
-            display: optional
-            bulk_html: $AssetHandler::AssetHandler::App::CMS::assoc_bulk_html
-        url:
-            auto: 1
-            display: optional
-            label: Link
-            col_class: image_link
-            filter_label: URL
-            html: >
-                sub {
-                    my ( $prop, $obj, $app ) = @_;
-                    my $url = $obj->url;
-                    my $out = qq{
-                        <a href="$url" class="show">Show</a>
-                    };
-                    return $out;
-                }
-        mime_type:
-            auto: 1
-            label: MIME Media Type
-        parent:
-            auto: 1
-            label: Parent AssetID
-            display: optional
-            html: >
-                sub {
-                    my ( $prop, $obj, $app ) = @_;
-                    my $parent_id = $obj->parent;
-                    my $blog_id = $obj->blog_id;
-                    my $out = qq{
-                        <a href="./mt.cgi?__mode=view&_type=asset&blog_id=$blog_id&id=$parent_id">$parent_id</a>
-                    };
-                    return $out;
-                }
-        not_associated_objects:
-            base: __virtual.hidden
-            label: Asset associated with no objects
-            display: none
-            terms: $AssetHandler::AssetHandler::App::CMS::no_assoc_terms
-            singleton: 1
-list_actions:
-    asset:
+  cms:
+    page_actions:
+      list_asset:
+        transport_assets:
+          label: Import Assets
+          dialog: start_asshat_transporter
+          condition: $AssetHandler::AssetHandler::Util::is_blog_context
+      list_assets:
+        transport_assets:
+          label: Import Assets
+          dialog: start_asshat_transporter
+          condition: $AssetHandler::AssetHandler::Util::is_blog_context
+    list_actions:
+      asset:
         batch_editor:
-            label: Batch Edit
-            code: $AssetHandler::AssetHandler::App::CMS::open_batch_editor_listing
-            condition: $AssetHandler::AssetHandler::Util::is_illiad
-            no_prompt: 1
+          label: Batch Edit Assets
+          code: $AssetHandler::AssetHandler::App::CMS::open_batch_editor
+          condition: $AssetHandler::AssetHandler::Util::is_mt5
+        unlink:
+          label: Unlink
+          code: $AssetHandler::AssetHandler::App::CMS::unlink_asset
+          condition: $AssetHandler::AssetHandler::Util::is_blog_context
+    methods:
+      asshat_batch_editor: $AssetHandler::AssetHandler::App::CMS::open_batch_editor
+      asshat_batch_editor_listing: $AssetHandler::AssetHandler::App::CMS::open_batch_editor_listing
+      save_assets: $AssetHandler::AssetHandler::App::CMS::save_assets
+      start_asset_transporter: $AssetHandler::AssetHandler::App::CMS::start_transporter
+      asshat_transport_assets: $AssetHandler::AssetHandler::App::CMS::transport
+    menus:
+      asset:import:
+        label: Import
+        order: 300
+        mode: start_asset_transporter
+        condition: $AssetHandler::AssetHandler::Util::is_illiad
+        permission: upload
+        view:
+          - website
+          - blog
 system_filters:
   asset:
-    no_assoc:
-      filter_editable: 0
+  no_assoc:
+    filter_editable: 0
+    label: Asset associated with no objects
+    items:
+    - type: not_associated_objects
+    order: 1000
+list_actions:
+  asset:
+    batch_editor:
+      label: Batch Edit
+      code: $AssetHandler::AssetHandler::App::CMS::open_batch_editor_listing
+      condition: $AssetHandler::AssetHandler::Util::is_illiad
+      no_prompt: 1
+      permission: upload
+list_properties:
+  asset:
+    label:
+      auto: 1
+      label: Label
+      order: 200
+      display: force
+      bulk_html: >
+        sub {
+          my $prop = shift;
+          my ( $objs, $app ) = @_;
+          my @userpics = MT->model('objecttag')->load(
+            { blog_id           => 0,
+              object_datasource => 'asset',
+              object_id         => [ map { $_->id } @$objs ],
+            },
+            { fetchonly => { object_id => 1 },
+              join      => MT->model('tag')->join_on(
+                undef,
+                { name => '@userpic',
+                  id   => \'= objecttag_tag_id'
+                }
+              ),
+            }
+          );
+          my %is_userpic = map { $_->object_id => 1 } @userpics;
+          my @rows;
+          for my $obj (@$objs) {
+            my $id = $obj->id;
+            my $label
+              = MT::Util::remove_html( $obj->label
+                || $obj->file_name
+                || 'Untitled' );
+            my $blog_id
+              = $obj->has_column('blog_id') ? $obj->blog_id
+              : $app->blog                  ? $app->blog->id
+              :                             0;
+            my $type      = $prop->object_type;
+            my $edit_link = $app->uri(
+              mode => 'view',
+              args => {
+                _type   => $type,
+                id      => $id,
+                blog_id => $blog_id,
+              },
+            );
+            my $class_type = $obj->class_type;
+            my $url = $obj->url;
+            my $view = MT->translate('View');
+            my $view_img = MT->static_path . 'images/status_icons/view.gif';
+            require MT::FileMgr;
+            my $fmgr      = MT::FileMgr->new('Local');
+            my $file_path = $obj->file_path;
+            ## FIXME: Hardcoded
+            my $thumb_size = 45;
+            my $userpic_sticker
+              = $is_userpic{ $obj->id }
+              ? q{<span class="inuse-userpic sticky-label">Userpic</span>}
+              : '';
+            if ( $file_path && $fmgr->exists($file_path) ) {
+              my $img
+                = MT->static_path
+                . 'images/asset/'
+                . $class_type
+                . '-45.png';
+              if ( $obj->has_thumbnail ) {
+                my ( $orig_width, $orig_height )
+                  = ( $obj->image_width, $obj->image_height );
+                my ( $thumbnail_url, $thumbnail_width,
+                  $thumbnail_height );
+                if (   $orig_width > $thumb_size
+                  && $orig_height > $thumb_size )
+                {
+                  (   $thumbnail_url, $thumbnail_width,
+                    $thumbnail_height
+                    )
+                    = $obj->thumbnail_url(
+                    Height => $thumb_size,
+                    Width  => $thumb_size,
+                    Square => 1
+                    );
+                }
+                elsif ( $orig_width > $thumb_size ) {
+                  (   $thumbnail_url, $thumbnail_width,
+                    $thumbnail_height
+                    )
+                    = $obj->thumbnail_url(
+                    Width => $thumb_size, );
+                }
+                elsif ( $orig_height > $thumb_size ) {
+                  (   $thumbnail_url, $thumbnail_width,
+                    $thumbnail_height
+                    )
+                    = $obj->thumbnail_url(
+                    Height => $thumb_size, );
+                }
+                else {
+                  (   $thumbnail_url, $thumbnail_width,
+                    $thumbnail_height
+                    )
+                    = ( $obj->url, $orig_width,
+                    $orig_height );
+                }
+                my $thumbnail_width_offset = int(
+                  ( $thumb_size - $thumbnail_width ) / 2 );
+                my $thumbnail_height_offset = int(
+                  ( $thumb_size - $thumbnail_height ) / 2 );
+                push @rows, qq{
+                  <span class="title"><a href="$edit_link">$label</a></span>$userpic_sticker&nbsp;<a href="$url"><img src="$view_img" alt="$view" /></a>
+                  <div class="thumbnail picture small">
+                    <img alt="" src="$thumbnail_url" style="padding: ${thumbnail_height_offset}px ${thumbnail_width_offset}px" />
+                  </div>
+                };
+              }
+              else {
+                push @rows, qq{
+                  <span class="title"><a href="$edit_link">$label</a></span>$userpic_sticker&nbsp;<a href="$url"><img src="$view_img" alt="$view" /></a>
+                  <div class="file-type $class_type picture small">
+                    <img alt="$class_type" src="$img" class="asset-type-icon asset-type-$class_type" />
+                  </div>
+                };
+              }
+            }
+            else {
+              my $img
+                = MT->static_path
+                . 'images/asset/'
+                . $class_type
+                . '-warning-45.png';
+              push @rows, qq{
+                <span class="title"><a href="$edit_link">$label</a></span>$userpic_sticker
+                <div class="file-type missing picture small">
+                  <img alt="$class_type" src="$img" class="asset-type-icon asset-type-$class_type" />
+                </div>
+              };
+            }
+          }
+          @rows;
+        }
+    file_name:
+      auto: 1
+      display: default
+      order: 300
+      label: File Name
+    url:
+      auto: 1
+      display: optional
+      order: 400
+      label: Link
+      filter_label: URL
+      html: >
+        sub {
+          my ($prop, $obj, $app) = @_;
+          my $url = $obj->url;
+          my $view = MT->translate('View');
+          my $view_img = MT->static_path . 'images/status_icons/view.gif';
+          my $out = qq {
+            <span>$url</span>&nbsp;<a href="$url"><img src="$view_img" alt="$view" /></a>
+          };
+          return $out;
+        }
+    file_path:
+      auto: 1
+      display: optional
+      order: 400
+      label: Path
+      html: >
+        sub {
+          my ($prop, $obj, $app) = @_;
+          my $path = $obj->file_path;
+          $path =~ s{\\}{/}g;
+          my $url = $obj->url;
+          my $view = MT->translate('View');
+          my $view_img = MT->static_path . 'images/status_icons/view.gif';
+          my $out = qq {
+            <span>$path</span>&nbsp;<a href="$url"><img src="$view_img" alt="$view" /></a>
+          };
+          return $out;
+        }
+    created_on:
+      auto: 1
+      display: optional
+      order: 500
+      html: >
+        sub {
+          my ($prop, $obj, $app) = @_;
+          my $created_on = $obj->created_on;
+          my $out = qq {
+            $created_on
+          };
+          return $out;
+        }
+    modified_on:
+      auto: 1
+      display: optional
+      order: 500
+      html: >
+        sub {
+          my ($prop, $obj, $app) = @_;
+          my $modified_on = $obj->modified_on;
+          my $out = qq {
+            $modified_on
+          };
+          return $out;
+        }
+    description:
+      auto: 1
+      display: optional
+      order: 600
+      label: Description
+    mime_type:
+      auto: 1
+      order: 600
+      label: MIME Media Type
+    class:
+      auto: 1
+      base: __virtual.single_select
+      display: optional
+      order: 600
+      label: Type
+      col: class
+      terms: >
+        sub {
+          my $prop = shift;
+          my ( $args, $db_terms, $db_args ) = @_;
+          my $value = $args->{value};
+          $db_args->{no_class} = 0;
+          $db_terms->{class}   = $value;
+          return;
+        }
+      single_select_options:
+        - label: Image
+          value: image
+        - label: Audio
+          value: audio
+        - label: Video
+          value: video
+        - label: File
+          value: file
+    file_ext:
+      auto: 1
+      display: optional
+      order: 600
+      label: File Extension
+    parent:
+      auto: 1
+      label: Parent AssetID
+      display: optional
+      order: 1100
+      html_link: >
+        sub {
+          my $prop = shift;
+          my ( $obj, $app, $opts ) = @_;
+          return $app->uri(
+            mode => 'view',
+            args => {
+              _type => 'asset',
+              blog_id => $obj->blog_id,
+              id => $obj->parent,
+            },
+          );
+        }
+    associated_objects:
+      label: Associated Objects
+      display: optional
+      order: 1200
+      bulk_html: $AssetHandler::AssetHandler::App::CMS::assoc_bulk_html
+    not_associated_objects:
+      base: __virtual.hidden
       label: Asset associated with no objects
-      items:
-        - type: not_associated_objects
-      order: 1000
+      display: none
+      order: 1200
+      terms: $AssetHandler::AssetHandler::App::CMS::no_assoc_terms
+      singleton: 1
+    tags:
+      label: Tag
+      display: optional
+      order: 1200
+      col_class: string
+      html: >
+        sub {
+          my ($prop, $obj) = @_;
+          my @tags =$obj->tags;
+          return join ', ', (map { MT::Util::encode_html($_) } @tags);
+        }

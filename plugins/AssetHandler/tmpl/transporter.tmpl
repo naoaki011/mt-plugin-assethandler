@@ -75,6 +75,17 @@
             <div class="textarea-wrapper<mt:if name="readonly"> readonly</mt:if>"><input type="text" name="url" value="<mt:var name="url" escape="html">" id="url" class="full-width"<mt:if name="readonly"> readonly="true"</mt:if> /></div>
     </mtapp:setting>
 
+    <mtapp:setting
+        id="asset_category"
+        label_class="top-label"
+        label="<__trans phrase="Make Entry (with Category)">"
+        show_hint="0">
+        <div class="textarea-wrapper">
+            <input type="checkbox" name="make_entry" value="1" class="select" <mt:if name="make_entry"> checked="checked"</mt:if> />
+            <input type="text" name="asset_category" value="<mt:var name="asset_category" escape="html">" id="asset_category" class="full-width" />
+        </div>
+    </mtapp:setting>
+
     <mt:if name="is_directory">
         <mtapp:statusmsg
          id="is_directory"

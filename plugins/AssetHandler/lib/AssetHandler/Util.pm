@@ -55,7 +55,7 @@ sub is_user_can {
 }
 
 sub mime_type {
-    my $file = shift;
+    my $file_ext = shift;
     my %mime_type = (
         'css'   => 'text/css',
         'html'  => 'text/html',
@@ -146,20 +146,9 @@ sub mime_type {
         'xpm'   => 'image/x-pixmap',
         'xwd'   => 'image/x-xwindowdump',
     );
-    my $extension = file_extension( $file );
-    my $type = $mime_type{ $extension };
+    my $type = $mime_type{ $file_ext };
     $type = 'text/plain' unless $type;
     return $type;
-}
-
-sub file_extension {
-    my ( $file, $nolc ) = @_;
-    my $extension = '';
-    if ( $file =~ /\.([^.]+)\z/ ) {
-        $extension = $1;
-        $extension = lc( $extension ) unless $nolc;
-    }
-    return $extension;
 }
 
 sub doLog {

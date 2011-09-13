@@ -500,6 +500,10 @@ sub header_add_styles {
 #asset-table th.tags {
     width: 12em;
 }
+#asset-table td.parent {
+    display: block;
+    width: auto;
+}
 </style>
 };
     $html_head->innerHTML($innerHTML);

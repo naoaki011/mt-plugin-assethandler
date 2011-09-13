@@ -82,6 +82,11 @@ list_properties:
       label: Label
       order: 200
       display: force
+      sub_fields:
+        -
+          class: view
+          label: View
+          display: optional
       bulk_html: >
         sub {
           my $prop = shift;
@@ -183,7 +188,7 @@ list_properties:
                 my $thumbnail_height_offset = int(
                   ( $thumb_size - $thumbnail_height ) / 2 );
                 push @rows, qq{
-                  <span class="title"><a href="$edit_link">$label</a></span>$userpic_sticker&nbsp;<a href="$url"><img src="$view_img" alt="$view" /></a>
+                  <span class="title"><a href="$edit_link">$label</a></span>$userpic_sticker<span class="view">&nbsp;<a href="$url"><img src="$view_img" alt="$view" /></a></span>
                   <div class="thumbnail picture small">
                     <img alt="" src="$thumbnail_url" style="padding: ${thumbnail_height_offset}px ${thumbnail_width_offset}px" />
                   </div>
@@ -191,7 +196,7 @@ list_properties:
               }
               else {
                 push @rows, qq{
-                  <span class="title"><a href="$edit_link">$label</a></span>$userpic_sticker&nbsp;<a href="$url"><img src="$view_img" alt="$view" /></a>
+                  <span class="title"><a href="$edit_link">$label</a></span>$userpic_sticker<span class="view">&nbsp;<a href="$url"><img src="$view_img" alt="$view" /></a></span>
                   <div class="file-type $class_type picture small">
                     <img alt="$class_type" src="$img" class="asset-type-icon asset-type-$class_type" />
                   </div>
@@ -216,12 +221,28 @@ list_properties:
         }
     file_name:
       auto: 1
-      display: default
+      display: optional
       order: 300
       label: File Name
+      sub_fields:
+        -
+          class: pixels
+          label: Pixels
+          display: optional
+      html: >
+        sub {
+          my ($prop, $obj, $app) = @_;
+          my $file_name = $obj->file_name;
+          my $width = $obj->image_width;
+          my $height = $obj->image_height;
+          my $out = qq {
+            <span>$file_name</span><span class="pixels"><br />
+            ($width px X $height px)</span>
+          };
+          return $out;
+        }
     url:
       auto: 1
-      display: optional
       order: 400
       label: Link
       filter_label: URL
@@ -232,13 +253,12 @@ list_properties:
           my $view = MT->translate('View');
           my $view_img = MT->static_path . 'images/status_icons/view.gif';
           my $out = qq {
-            <span>$url</span>&nbsp;<a href="$url"><img src="$view_img" alt="$view" /></a>
+            <span>$url</span><span class="view">&nbsp;<a href="$url"><img src="$view_img" alt="$view" /></a></span>
           };
           return $out;
         }
     file_path:
       auto: 1
-      display: optional
       order: 400
       label: Path
       html: >
@@ -250,37 +270,50 @@ list_properties:
           my $view = MT->translate('View');
           my $view_img = MT->static_path . 'images/status_icons/view.gif';
           my $out = qq {
-            <span>$path</span>&nbsp;<a href="$url"><img src="$view_img" alt="$view" /></a>
+            <span>$path</span><span class="view">&nbsp;<a href="$url"><img src="$view_img" alt="$view" /></a></span>
           };
           return $out;
         }
     created_on:
       auto: 1
-      display: optional
       order: 500
+      sub_fields:
+        -
+          class: created_time
+          label: Created Time
+          display: optional
       html: >
         sub {
           use MT::Util qw( format_ts );
           my ($prop, $obj, $app) = @_;
           my $created_on =
-            format_ts( MT::App::CMS::LISTING_TIMESTAMP_FORMAT(), $obj->created_on, $app->blog, $app->user ? $app->user->preferred_language : undef );
+            format_ts( MT::App::CMS::LISTING_DATE_FORMAT(), $obj->created_on, $app->blog, $app->user ? $app->user->preferred_language : undef );
+          my $created_time =
+            format_ts( '%I:%M:%S%p', $obj->created_on, $app->blog, $app->user ? $app->user->preferred_language : undef );
           my $out = qq {
-            $created_on
+            <span>$created_on</span><span class="created_time"><br />$created_time</span>
           };
           return $out;
         }
     modified_on:
       auto: 1
-      display: optional
       order: 500
+      display: optional
+      sub_fields:
+        -
+          class: modified_time
+          label: Modified Time
+          display: optional
       html: >
         sub {
           use MT::Util qw( format_ts );
           my ($prop, $obj, $app) = @_;
           my $modified_on =
-            format_ts( MT::App::CMS::LISTING_TIMESTAMP_FORMAT(), $obj->modified_on, $app->blog, $app->user ? $app->user->preferred_language : undef );
+            format_ts( MT::App::CMS::LISTING_DATE_FORMAT(), $obj->modified_on, $app->blog, $app->user ? $app->user->preferred_language : undef );
+          my $modified_time =
+            format_ts( '%I:%M:%S%p', $obj->modified_on, $app->blog, $app->user ? $app->user->preferred_language : undef );
           my $out = qq {
-            $modified_on
+            <span>$modified_on</span><span class="modified_time"><br />$modified_time</span>
           };
           return $out;
         }
@@ -291,6 +324,7 @@ list_properties:
       label: Description
     mime_type:
       auto: 1
+      display: optional
       order: 600
       label: MIME Media Type
     class:
@@ -326,7 +360,6 @@ list_properties:
     parent:
       auto: 1
       label: Parent AssetID
-      display: optional
       order: 1100
       html_link: >
         sub {
@@ -343,7 +376,6 @@ list_properties:
         }
     associated_objects:
       label: Associated Objects
-      display: optional
       order: 1200
       bulk_html: $AssetHandler::AssetHandler::App::CMS::assoc_bulk_html
     not_associated_objects:
@@ -355,7 +387,6 @@ list_properties:
       singleton: 1
     tags:
       label: Tag
-      display: optional
       order: 1200
       col_class: string
       html: >

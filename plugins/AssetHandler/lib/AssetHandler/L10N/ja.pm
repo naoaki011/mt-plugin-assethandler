@@ -25,6 +25,9 @@ use vars qw( %Lexicon );
 	'MIME Media Type' => 'MIMEタイプ',
 	'Parent AssetID' => '親アイテムID',
 	'Asset associated with no objects' => '関連付けされていないアイテム',
+	'Created Time' => '作成時刻',
+	'Modified Time' => '更新時刻',
+	'Pixels' => 'ピクセル数',
 );
 
 1;

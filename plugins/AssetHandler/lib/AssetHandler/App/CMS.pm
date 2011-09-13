@@ -237,11 +237,11 @@ sub transport {
     my $blog_id = $app->param('blog_id')
       or return $app->error('No blog in context for asset import');
     my $blog   = MT::Blog->load($blog_id)
-        or return $app->error(
-            sprintf 'Failed to load blog %s: %s',
-                $blog_id,
-                (MT::Blog->errstr || "Blog not found")
-    );
+      or return $app->error(
+        sprintf 'Failed to load blog %s: %s',
+        $blog_id,
+        (MT::Blog->errstr || "Blog not found")
+      );
 
     $app->validate_magic()
       or return MT->translate( 'Permission denied.' );
@@ -252,7 +252,7 @@ sub transport {
     my $path    = $q->param('path');
     $path       =~ s{\\}{/}g;
     my $url     = $q->param('url');
-    doLog($q->param('make_entry') . $q->param('asset_category'));
+#    doLog($q->param('make_entry') . $q->param('asset_category'));
     my $plugin  = MT->component('AssetHandler');
     my $param   = {
         blog_id   => $blog_id,
@@ -374,20 +374,23 @@ sub _process_transport {
     } else {
         $asset->modified_by( $app->user->id );
     }
-    my $original = $asset->clone;
 
     my $site_url = $blog->site_url;
     $url =~ s!\\!/!g;
     $url =~ s!$site_url!%r/!;
-
     $asset->url($url);
     if ($is_image) {
         $asset->image_width($w);
         $asset->image_height($h);
     }
+    require LWP::MediaTypes;
+    $mimetype = LWP::MediaTypes::guess_media_type($asset->file_path);
     $asset->mime_type($mimetype) if $mimetype;
     $asset->save;
+
+    my $original = $asset->clone;
     $app->run_callbacks( 'cms_post_save.asset', $app, $asset, $original );
+
     if ($is_image) {
         $app->run_callbacks(
             'cms_upload_file.' . $asset->class,
@@ -443,6 +446,7 @@ sub _process_transport {
             blog  => $blog
         );
     }
+
 }
 
 sub print_transport_progress {

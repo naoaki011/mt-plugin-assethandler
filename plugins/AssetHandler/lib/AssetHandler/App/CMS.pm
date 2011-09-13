@@ -19,7 +19,8 @@ sub open_batch_editor_listing {
     if (! $blog ) {
         return MT->translate( 'Invalid request.' );
     }
-    $app->validate_magic() or return MT->translate( 'Permission denied.' );
+    $app->validate_magic()
+      or return MT->translate( 'Permission denied.' );
     my $user = $app->user;
     if (! is_user_can( $blog, $user, 'upload' ) ) {
         return MT->translate( 'Permission denied.' );
@@ -101,7 +102,8 @@ sub open_batch_editor {
     if (! $blog ) {
         return MT->translate( 'Invalid request.' );
     }
-    $app->validate_magic() or return MT->translate( 'Permission denied.' );
+    $app->validate_magic()
+      or return MT->translate( 'Permission denied.' );
     my $user = $app->user;
     if (! is_user_can( $blog, $user, 'upload' ) ) {
         return MT->translate( 'Permission denied.' );
@@ -181,7 +183,8 @@ sub save_assets {
     if (! $blog ) {
         return MT->translate( 'Invalid request.' );
     }
-    $app->validate_magic() or return MT->translate( 'Permission denied.' );
+    $app->validate_magic()
+     or return MT->translate( 'Permission denied.' );
     my $user = $app->user;
     if (! is_user_can( $blog, $user, 'upload' ) ) {
         return MT->translate( 'Permission denied.' );
@@ -214,7 +217,8 @@ sub start_transporter {
     if (! $blog ) {
         return MT->translate( 'Invalid request.' );
     }
-#    $app->validate_magic() or return MT->translate( 'Permission denied.' );
+#    $app->validate_magic()
+#      or return MT->translate( 'Permission denied.' );
     my $user = $app->user;
     if (! is_user_can( $blog, $user, 'upload' ) ) {
         return MT->translate( 'Permission denied.' );
@@ -239,9 +243,8 @@ sub transport {
                 (MT::Blog->errstr || "Blog not found")
     );
 
-
-
-#    $app->validate_magic() or return MT->translate( 'Permission denied.' );
+    $app->validate_magic()
+      or return MT->translate( 'Permission denied.' );
     my $user = $app->user;
     if (! is_user_can( $blog, $user, 'upload' ) ) {
         return MT->translate( 'Permission denied.' );
@@ -320,14 +323,6 @@ sub _process_transport {
     require MT::Blog;
     my $blog_id    = $app->param('blog_id');
     my $blog       = MT::Blog->load($blog_id);
-
-
-#    $app->validate_magic() or return MT->translate( 'Permission denied.' );
-    my $user = $app->user;
-    if (! is_user_can( $blog, $user, 'upload' ) ) {
-        return MT->translate( 'Permission denied.' );
-    }
-
     my $local_file = $param->{full_path};
     my $url        = $param->{full_url};   
     my $bytes      = -s $local_file;

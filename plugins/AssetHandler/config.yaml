@@ -10,7 +10,7 @@ key: AssetHandler
 id: AssetHandler
 l10n_class: AssetHandler::L10N
 version: 2.02
-author_name: Naoaki Onozaki
+author_name: naoaki.onozaki
 author_link: http://www.zelazny.mydns.jp/
 plugin_link: https://github.com/naoaki011/mt-plugin-assethandler
 description: <__trans phrase="AssetHandler allows you to mass import and manage assets in Movable Type">
@@ -260,8 +260,10 @@ list_properties:
       order: 500
       html: >
         sub {
+          use MT::Util qw( format_ts );
           my ($prop, $obj, $app) = @_;
-          my $created_on = $obj->created_on;
+          my $created_on =
+            format_ts( MT::App::CMS::LISTING_TIMESTAMP_FORMAT(), $obj->created_on, $app->blog, $app->user ? $app->user->preferred_language : undef );
           my $out = qq {
             $created_on
           };
@@ -273,8 +275,10 @@ list_properties:
       order: 500
       html: >
         sub {
+          use MT::Util qw( format_ts );
           my ($prop, $obj, $app) = @_;
-          my $modified_on = $obj->modified_on;
+          my $modified_on =
+            format_ts( MT::App::CMS::LISTING_TIMESTAMP_FORMAT(), $obj->modified_on, $app->blog, $app->user ? $app->user->preferred_language : undef );
           my $out = qq {
             $modified_on
           };

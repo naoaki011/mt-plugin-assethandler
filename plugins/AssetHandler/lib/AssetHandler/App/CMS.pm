@@ -22,10 +22,10 @@ sub open_batch_editor_listing {
     $app->validate_magic()
       or return MT->translate( 'Permission denied.' );
     my $user = $app->user;
-    if (! is_user_can( $blog, $user, 'upload' ) ) {
+    if (! is_user_can( $blog, $user, 'edit_assets' ) ) {
         return MT->translate( 'Permission denied.' );
     }
-    my $blog_id = $app->param('blog_id');
+    my $blog_id = $blog->id;
     my $auth_prefs = $app->user->entry_prefs;
     my $tag_delim  = chr( $auth_prefs->{tag_delim} );
     require File::Basename;
@@ -70,27 +70,24 @@ sub open_batch_editor_listing {
         $row->{tags} = $tags;
     };
     require File::Spec;
-#    return $app->listing( {
-#            terms => { id => \@ids, blog_id => $app->param('blog_id') },
-#            args => { sort => 'created_on', direction => 'descend' },
-#            type => 'asset',
-#            code => $hasher,
-#            template => File::Spec->catdir(
-#                $plugin->path, 'tmpl', 'asset_batch_editor.tmpl'
-#            ),
-#            params => { (
-#                    $blog_id
-#                    ? ( blog_id      => $blog_id,
-#                        edit_blog_id => $blog_id,
-#                      ) 
-#                    : ( system_overview => 1 )
-#                ),
-#                saved => $app->param('saved') || 0,
-#                return_args => "__mode=list&_type=asset&blog_id=$blog_id"
-#            }
-#        }
-#    );
 
+    return $app->listing( {
+        terms => { id => \@ids, blog_id => $app->param('blog_id') },
+        args => { sort => 'created_on', direction => 'descend' },
+        type => 'asset',
+        code => $hasher,
+        template => File::Spec->catdir( $plugin->path, 'tmpl', 'asset_batch_editor.tmpl' ),
+        params => { (
+                $blog_id
+                ? ( blog_id      => $blog_id,
+                    edit_blog_id => $blog_id,
+                  ) 
+                : ( system_overview => 1 )
+            ),
+            saved => $app->param('saved') || 0,
+            return_args => "__mode=list&_type=asset&blog_id=$blog_id"
+        }
+    });
 }
 
 sub open_batch_editor {
@@ -471,7 +468,7 @@ sub print_transport_progress {
 
 sub header_add_styles {
     my ($cb, $app, $param, $tmpl) = @_;
-    return 1 if ($app->param('__mode') ne 'list');
+    return 1 if (($app->param('__mode') ne 'list') || ($app->param('_type') ne 'asset'));
     my $heads = $tmpl->getElementsByTagName('setvarblock');
     my $head;
     foreach (@$heads) {
@@ -731,98 +728,6 @@ HERE
     $$tmpl =~ s/$old/$new/;
 }
 
-sub assoc_bulk_html {
-    my ($prop, $assets, $app, $opts) = @_;
-
-    # load objectassets
-    my @asset_ids = map { $_->id } @$assets;
-    my @obj_assets = $app->model('objectasset')->load(
-        { asset_id => \@asset_ids, }
-    );
-
-    # associates with assets and objects
-    my (%class_obj_ids, %asset_obj_ids, %class_objs);
-    for my $obj_asset (@obj_assets) {
-        my $ds = $obj_asset->object_ds;
-        my $asset_id = $obj_asset->asset_id;
-        my $object_id = $obj_asset->object_id;
-        $asset_obj_ids{$asset_id}->{$ds} = {}
-            unless (defined($asset_obj_ids{$asset_id}->{$ds}));
-        $asset_obj_ids{$asset_id}->{$ds}->{$object_id} = 1;
-        $class_obj_ids{$ds} = {}
-            unless (defined($class_obj_ids{$ds}));
-        $class_obj_ids{$ds}->{$object_id} = 1;
-    }
-
-    # load objects
-    for my $class (keys %class_obj_ids) {
-        my @obj_ids = keys %{$class_obj_ids{$class}};
-        my @cur_class_objs = $app->model($class)->load({ id => \@obj_ids });
-        my %cur_class_objs = map { $_->id => $_ } @cur_class_objs;
-        $class_objs{$class} = \%cur_class_objs;
-    }
-
-    # create bulk html
-    my @rows;
-    for my $asset (@$assets) {
-        my $html;
-        my @classes = keys %{$asset_obj_ids{$asset->id}};
-        for (my $i = 0; $i < scalar(@classes); $i++) {
-            my $class = $classes[$i];
-            $html = '<ul>' if (!$i);
-            my @obj_ids = keys %{$asset_obj_ids{$asset->id}->{$class}};
-            for my $obj_id (@obj_ids) {
-                my $obj = $class_objs{$class}->{$obj_id};
-                $html .= '<li class="assoc-' . $obj->class . '">';
-                my $url = $app->uri(
-                    mode => 'view',
-                    args => {
-                        '_type' => $obj->class,
-                        'id' => $obj->id,
-                        ($obj->has_column('blog_id'))
-                            ? ('blog_id' => $obj->blog_id)
-                            : (),
-                    },
-                );
-                my $has_label = 0;
-                for my $label_col qw( name title label ) {
-                    if ($obj->has_column($label_col)) {
-                       $html .= '<a href="' . $url . '" title="(' . $obj->class_label . ')' . $obj->column($label_col) . '">' . $obj->column($label_col) . '</a>';
-                       $has_label = 1;
-                       last;
-                    }
-                }
-                if (!$has_label) {
-                    $html .= '<a href="' . $url . '" title="(' . $obj->class_label . ')' . $obj->id . '">(' . $obj->class_label . ')ID:' . $obj->id . '</a>';
-                }
-                $html .= '</li>';
-            }
-            $html .= '</ul>' if ($i == scalar(@classes) - 1);
-        }
-        push @rows, ($html) ? $html : '-';
-    }
-    return @rows;
-}
-
-sub no_assoc_terms {
-    my ( $prop, $args, $db_terms, $db_args ) = @_;
-    $db_args->{joins} ||= [];
-    push @{ $db_args->{joins} },
-        MT->model('objectasset')->join_on(
-            undef,
-            {
-                id => \'is null',
-            },
-            {
-                type => 'left',
-                condition => {
-                    asset_id => \'= asset_id',
-                },
-            },
-        );
-    return;
-}
-
 sub unlink_asset {
     my ($app) = @_;
     my @ids = $app->param('id');
@@ -846,6 +751,148 @@ sub unlink_asset {
     }
     $app->call_return( saved => 1 );
 }
+
+sub path_tor {
+    my ($app) = @_;
+    my $blog_id = $app->param('blog_id');
+    if ($blog_id) {
+        require MT::Blog;
+        my $blog = MT::Blog->load($blog_id);
+        my $site_path = $blog->site_path;
+        $site_path =~ s!\\!/!g;
+        my $site_url = $blog->site_url;
+        my @ids = $app->param('id');
+        require MT::Asset;
+        foreach my $id (@ids) {
+            my $asset = MT::Asset->load($id);
+            if ( $asset->class =~ /image|audio|video|file|archive/) {
+                my $file_path = $asset->file_path;
+                $file_path =~ s!\\!/!g;
+                $file_path =~ s!$site_path!%r!;
+                $asset->file_path( $file_path );
+                my $file_url = $asset->url;
+                $file_url =~ s!\\!/!g;
+                $file_url =~ s!$site_url!%r/!;
+                $asset->url( $file_url );
+                $asset->save;
+            }
+        }
+        $app->call_return( modified => 1 );
+    }
+}
+
+sub flatten_path {
+    my ($app) = @_;
+    my $blog_id = $app->param('blog_id');
+    if ($blog_id) {
+        require MT::Blog;
+        my $blog = MT::Blog->load($blog_id);
+        my $site_path = $blog->site_path;
+        $site_path =~ s!\\!/!g;
+        my $site_url = $blog->site_url;
+        my @ids = $app->param('id');
+        require MT::Asset;
+        foreach my $id (@ids) {
+            my $asset = MT::Asset->load($id);
+            if ( $asset->class =~ /image|audio|video|file|archive/) {
+                my $file_path = $asset->file_path;
+                $file_path =~ s!\\!/!g;
+                $file_path =~ s!%r!$site_path!;
+                $asset->file_path( $file_path );
+                my $file_url = $asset->url;
+                $file_url =~ s!\\!/!g;
+                $file_url =~ s!%r/!$site_url!;
+                $asset->url( $file_url );
+                $asset->save;
+            }
+        }
+        $app->call_return( modified => 1 );
+    }
+}
+
+sub fix_url {
+    my ($app) = @_;
+    my $blog_id = $app->param('blog_id');
+    if ($blog_id) {
+        require MT::Blog;
+        my $blog = MT::Blog->load($blog_id);
+        my $site_path = $blog->site_path;
+        $site_path =~ s!\\!/!g;
+        my $site_url = $blog->site_url;
+        my @ids = $app->param('id');
+        require MT::Asset;
+        foreach my $id (@ids) {
+            my $asset = MT::Asset->load($id);
+            if ( $asset->class =~ /image|audio|video|file|archive/) {
+                my $file_path = $asset->file_path;
+                $file_path =~ s!\\!/!g;
+                $file_path =~ s!$site_path!!;
+                my $url = $site_url . $file_path;
+                $url =~ s!$site_url!%r/!;
+                $url =~ s!//!/!;
+                $asset->url( $url );
+                $asset->save;
+            }
+        }
+        $app->call_return( fixed => 1 );
+    }
+}
+
+sub modify_path {
+    my ($app) = @_;
+    my $q = $app->{query};
+    my $blog_id = $app->param('blog_id');
+    my @aids = $q->param ('id');
+
+    my %param;
+    $param{return_args} = '__mode=list_asset&blog_id=' . $blog_id;
+
+    my @items;
+    foreach (@aids) {
+        my $asset = MT::Asset->load ({ id => $_ })
+            or next;
+        if ( $asset->class =~ /image|audio|video|file|archive/) {
+            push @items, {
+                id => $asset->id,
+                name => $asset->label || $asset->file_name,
+                path => $asset->file_path,
+            };
+        }
+    }
+    $param{items} = \@items;
+    my $blog = MT::Blog->load($blog_id);
+    $param{old_path} = $blog->site_path;
+
+    my $plugin = MT->component('AssetPathFix');
+    my $tmpl = $plugin->load_tmpl('modify_itempath.tmpl');
+    my $content = $app->build_page($tmpl,\%param);
+
+}
+
+sub _hdlr_duplicate_mode {
+    my ($app) = @_;
+    my $q = $app->{query};
+    $app->return_args ($q->param ('return_args'));
+
+    my $target_blog_id = $q->param ('blog_id');
+    my $mode = $q->param('__mode') || '';
+
+    $target_blog_id || $mode
+             or return $app->redirect ($app->return_uri); #error
+  
+    # Move/Duplicate entries
+    my @eids = $q->param ('id');
+    foreach (@eids) {
+        my $entry = MT::Entry->load ({ id => $_ })
+            or next;
+        my $clone = $entry->clone;
+        $clone->id (undef);
+        $clone->blog_id ($target_blog_id);
+        $clone->save;
+    }
+    return $app->redirect ($app->return_uri. '&saved=1');
+}
+
 
 sub find_duplicated_assets {
     my ($app) = @_;

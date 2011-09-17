@@ -28,6 +28,10 @@ use vars qw( %Lexicon );
 	'Created Time' => '作成時刻',
 	'Modified Time' => '更新時刻',
 	'Pixels' => 'ピクセル数',
+	'FullPath to %r' => 'ブログパスを「%r」に変更',
+	'Flatten Path' => 'ブログパスをフルパスに展開',
+	'Fix wrong URL from Path' => 'URLをファイルパスに合わせて修正',
+	'Modify File Path' => 'ファイルパスを変更する',
 );
 
 1;

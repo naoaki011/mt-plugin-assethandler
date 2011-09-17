@@ -730,6 +730,16 @@ HERE
 
 sub unlink_asset {
     my ($app) = @_;
+    my $blog = $app->blog;
+    if (! $blog ) {
+        return MT->translate( 'Invalid request.' );
+    }
+    $app->validate_magic()
+      or return MT->translate( 'Permission denied.' );
+    my $user = $app->user;
+    if (! is_user_can( $blog, $user, 'upload' ) ) {
+        return MT->translate( 'Permission denied.' );
+    }
     my @ids = $app->param('id');
     require MT::Asset;
     foreach my $id (@ids) {
@@ -754,98 +764,122 @@ sub unlink_asset {
 
 sub path_tor {
     my ($app) = @_;
-    my $blog_id = $app->param('blog_id');
-    if ($blog_id) {
-        require MT::Blog;
-        my $blog = MT::Blog->load($blog_id);
-        my $site_path = $blog->site_path;
-        $site_path =~ s!\\!/!g;
-        my $site_url = $blog->site_url;
-        my @ids = $app->param('id');
-        require MT::Asset;
-        foreach my $id (@ids) {
-            my $asset = MT::Asset->load($id);
-            if ( $asset->class =~ /image|audio|video|file|archive/) {
-                my $file_path = $asset->file_path;
-                $file_path =~ s!\\!/!g;
-                $file_path =~ s!$site_path!%r!;
-                $asset->file_path( $file_path );
-                my $file_url = $asset->url;
-                $file_url =~ s!\\!/!g;
-                $file_url =~ s!$site_url!%r/!;
-                $asset->url( $file_url );
-                $asset->save;
-            }
-        }
-        $app->call_return( modified => 1 );
+    my $blog = $app->blog;
+    if (! $blog ) {
+        return MT->translate( 'Invalid request.' );
     }
+    $app->validate_magic()
+      or return MT->translate( 'Permission denied.' );
+    my $user = $app->user;
+    if (! is_user_can( $blog, $user, 'edit_assets' ) ) {
+        return MT->translate( 'Permission denied.' );
+    }
+    my $site_path = $blog->site_path;
+    $site_path =~ s!\\!/!g;
+    my $site_url = $blog->site_url;
+    my @ids = $app->param('id');
+    require MT::Asset;
+    foreach my $id (@ids) {
+        my $asset = MT::Asset->load($id);
+        if ( $asset->class =~ /image|audio|video|file|archive/) {
+            my $file_path = $asset->file_path;
+            $file_path =~ s!\\!/!g;
+            $file_path =~ s!$site_path!%r!;
+            $asset->file_path( $file_path );
+            my $file_url = $asset->url;
+            $file_url =~ s!\\!/!g;
+            $file_url =~ s!$site_url!%r/!;
+            $asset->url( $file_url );
+            $asset->save;
+        }
+    }
+    $app->call_return( modified => 1 );
 }
 
 sub flatten_path {
     my ($app) = @_;
-    my $blog_id = $app->param('blog_id');
-    if ($blog_id) {
-        require MT::Blog;
-        my $blog = MT::Blog->load($blog_id);
-        my $site_path = $blog->site_path;
-        $site_path =~ s!\\!/!g;
-        my $site_url = $blog->site_url;
-        my @ids = $app->param('id');
-        require MT::Asset;
-        foreach my $id (@ids) {
-            my $asset = MT::Asset->load($id);
-            if ( $asset->class =~ /image|audio|video|file|archive/) {
-                my $file_path = $asset->file_path;
-                $file_path =~ s!\\!/!g;
-                $file_path =~ s!%r!$site_path!;
-                $asset->file_path( $file_path );
-                my $file_url = $asset->url;
-                $file_url =~ s!\\!/!g;
-                $file_url =~ s!%r/!$site_url!;
-                $asset->url( $file_url );
-                $asset->save;
-            }
-        }
-        $app->call_return( modified => 1 );
+    my $blog = $app->blog;
+    if (! $blog ) {
+        return MT->translate( 'Invalid request.' );
     }
+    $app->validate_magic()
+      or return MT->translate( 'Permission denied.' );
+    my $user = $app->user;
+    if (! is_user_can( $blog, $user, 'edit_assets' ) ) {
+        return MT->translate( 'Permission denied.' );
+    }
+    my $site_path = $blog->site_path;
+    $site_path =~ s!\\!/!g;
+    my $site_url = $blog->site_url;
+    my @ids = $app->param('id');
+    require MT::Asset;
+    foreach my $id (@ids) {
+        my $asset = MT::Asset->load($id);
+        if ( $asset->class =~ /image|audio|video|file|archive/) {
+            my $file_path = $asset->file_path;
+            $file_path =~ s!\\!/!g;
+            $file_path =~ s!%r!$site_path!;
+            $asset->file_path( $file_path );
+            my $file_url = $asset->url;
+            $file_url =~ s!\\!/!g;
+            $file_url =~ s!%r/!$site_url!;
+            $asset->url( $file_url );
+            $asset->save;
+        }
+    }
+    $app->call_return( modified => 1 );
 }
 
 sub fix_url {
     my ($app) = @_;
-    my $blog_id = $app->param('blog_id');
-    if ($blog_id) {
-        require MT::Blog;
-        my $blog = MT::Blog->load($blog_id);
-        my $site_path = $blog->site_path;
-        $site_path =~ s!\\!/!g;
-        my $site_url = $blog->site_url;
-        my @ids = $app->param('id');
-        require MT::Asset;
-        foreach my $id (@ids) {
-            my $asset = MT::Asset->load($id);
-            if ( $asset->class =~ /image|audio|video|file|archive/) {
-                my $file_path = $asset->file_path;
-                $file_path =~ s!\\!/!g;
-                $file_path =~ s!$site_path!!;
-                my $url = $site_url . $file_path;
-                $url =~ s!$site_url!%r/!;
-                $url =~ s!//!/!;
-                $asset->url( $url );
-                $asset->save;
-            }
-        }
-        $app->call_return( fixed => 1 );
+    my $blog = $app->blog;
+    if (! $blog ) {
+        return MT->translate( 'Invalid request.' );
     }
+    $app->validate_magic()
+      or return MT->translate( 'Permission denied.' );
+    my $user = $app->user;
+    if (! is_user_can( $blog, $user, 'edit_assets' ) ) {
+        return MT->translate( 'Permission denied.' );
+    }
+    my $site_path = $blog->site_path;
+    $site_path =~ s!\\!/!g;
+    my $site_url = $blog->site_url;
+    my @ids = $app->param('id');
+    require MT::Asset;
+    foreach my $id (@ids) {
+        my $asset = MT::Asset->load($id);
+        if ( $asset->class =~ /image|audio|video|file|archive/) {
+            my $file_path = $asset->file_path;
+            $file_path =~ s!\\!/!g;
+            $file_path =~ s!$site_path!!;
+            my $url = $site_url . $file_path;
+            $url =~ s!$site_url!%r/!;
+            $url =~ s!//!/!;
+            $asset->url( $url );
+            $asset->save;
+        }
+    }
+    $app->call_return( fixed => 1 );
 }
 
 sub modify_path {
     my ($app) = @_;
+    my $blog = $app->blog;
+    if (! $blog ) {
+        return MT->translate( 'Invalid request.' );
+    }
+    $app->validate_magic()
+      or return MT->translate( 'Permission denied.' );
+    my $user = $app->user;
+    if (! is_user_can( $blog, $user, 'edit_assets' ) ) {
+        return MT->translate( 'Permission denied.' );
+    }
     my $q = $app->{query};
-    my $blog_id = $app->param('blog_id');
     my @aids = $q->param ('id');
 
     my %param;
-    $param{return_args} = '__mode=list_asset&blog_id=' . $blog_id;
+    $param{return_args} = '__mode=list_asset&blog_id=' . $blog->id;
 
     my @items;
     foreach (@aids) {
@@ -860,7 +894,6 @@ sub modify_path {
         }
     }
     $param{items} = \@items;
-    my $blog = MT::Blog->load($blog_id);
     $param{old_path} = $blog->site_path;
 
     my $plugin = MT->component('AssetPathFix');
@@ -868,31 +901,6 @@ sub modify_path {
     my $content = $app->build_page($tmpl,\%param);
 
 }
-
-sub _hdlr_duplicate_mode {
-    my ($app) = @_;
-    my $q = $app->{query};
-    $app->return_args ($q->param ('return_args'));
-
-    my $target_blog_id = $q->param ('blog_id');
-    my $mode = $q->param('__mode') || '';
-
-    $target_blog_id || $mode
-             or return $app->redirect ($app->return_uri); #error
-  
-    # Move/Duplicate entries
-    my @eids = $q->param ('id');
-    foreach (@eids) {
-        my $entry = MT::Entry->load ({ id => $_ })
-            or next;
-        my $clone = $entry->clone;
-        $clone->id (undef);
-        $clone->blog_id ($target_blog_id);
-        $clone->save;
-    }
-    return $app->redirect ($app->return_uri. '&saved=1');
-}
-
 
 sub find_duplicated_assets {
     my ($app) = @_;

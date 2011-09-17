@@ -46,7 +46,7 @@ applications:
         unlink:
           label: Unlink
           code: $AssetHandler::AssetHandler::App::CMS::unlink_asset
-          condition: $AssetHandler::AssetHandler::Util::is_blog_context
+          condition: $AssetHandler::AssetHandler::Util::is_mt5
           order: 200
 #          permit_action: 
 #          js_message: unlink
@@ -104,11 +104,20 @@ system_filters:
     order: 1000
 list_actions:
   asset:
+    unlink:
+      label: Unlink
+      code: $AssetHandler::AssetHandler::App::CMS::unlink_asset
+      condition: $AssetHandler::AssetHandler::Util::is_illiad
+      order: 200
+      button: 1
+      permission: upload
     batch_editor:
       label: Batch Edit
       code: $AssetHandler::AssetHandler::App::CMS::open_batch_editor_listing
       condition: $AssetHandler::AssetHandler::Util::is_illiad
+      order: 300
       no_prompt: 1
+      button: 1
       permission: upload
 list_properties:
   asset:

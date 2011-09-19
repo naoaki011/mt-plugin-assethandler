@@ -40,7 +40,6 @@ applications:
           code: $AssetHandler::AssetHandler::App::CMS::open_batch_editor
           condition: $AssetHandler::AssetHandler::Util::is_mt5
           order: 200
-#          permit_action: 
           no_prompt: 1
           button: 1
         unlink:
@@ -48,39 +47,24 @@ applications:
           code: $AssetHandler::AssetHandler::App::CMS::unlink_asset
           condition: $AssetHandler::AssetHandler::Util::is_mt5
           order: 200
-#          permit_action: 
-#          js_message: unlink
         fix_path_tor:
           label: FullPath to %r
           code: $AssetHandler::AssetHandler::App::CMS::path_tor
           order: 310
           condition: $AssetHandler::AssetHandler::Util::is_blog_context
-#          permit_action: 
-#          js_message: fix
         fix_path_tofull:
           label: Flatten Path
           code: $AssetHandler::AssetHandler::App::CMS::flatten_path
           order: 320
           condition: $AssetHandler::AssetHandler::Util::is_blog_context
-#          permit_action: 
-#          js_message: fix
         fix_url:
           label: Fix wrong URL from Path
           code: $AssetHandler::AssetHandler::App::CMS::fix_url
           order: 330
           condition: $AssetHandler::AssetHandler::Util::is_blog_context
-#          permit_action: 
-#          js_message: fix
-#        modify_path:
-#          label: Modify File Path
-#          code: $AssetHandler::AssetHandler::App::CMS::modify_path
-#          order: 340
-#          condition: $AssetHandler::AssetHandler::Util::is_blog_context
-#          permit_action: 
-#          js_message: fix
     methods:
       asset_batch_editor: $AssetHandler::AssetHandler::App::CMS::open_batch_editor
-      asset_batch_editor_listing: $AssetHandler::AssetHandler::App::CMS::open_batch_editor_listing
+#      asset_batch_editor_listing: $AssetHandler::AssetHandler::App::CMS::open_batch_editor_listing
       save_assets: $AssetHandler::AssetHandler::App::CMS::save_assets
       start_asset_transporter: $AssetHandler::AssetHandler::App::CMS::start_transporter
       handle_transport_assets: $AssetHandler::AssetHandler::App::CMS::transport
@@ -111,14 +95,14 @@ list_actions:
       order: 200
       button: 1
       permission: upload
-    batch_editor:
-      label: Batch Edit
-      code: $AssetHandler::AssetHandler::App::CMS::open_batch_editor_listing
-      condition: $AssetHandler::AssetHandler::Util::is_illiad
-      order: 300
-      no_prompt: 1
-      button: 1
-      permission: upload
+#    batch_editor:
+#      label: Batch Edit
+#      code: $AssetHandler::AssetHandler::App::CMS::open_batch_editor_listing
+#      condition: $AssetHandler::AssetHandler::Util::is_illiad
+#      order: 300
+#      no_prompt: 1
+#      button: 1
+#      permission: upload
 list_properties:
   asset:
     label:
@@ -315,6 +299,25 @@ list_properties:
           my $view_img = MT->static_path . 'images/status_icons/view.gif';
           my $out = qq {
             <span>$path</span><span class="view">&nbsp;<a href="$url"><img src="$view_img" alt="$view" /></a></span>
+          };
+          return $out;
+        }
+    folder:
+      auto: 1
+      base: __virtual.string
+      order: 410
+      label: Folder
+      html: >
+        sub {
+          my ($prop, $obj, $app) = @_;
+          my $path = $obj->file_path;
+          $path =~ s{\\}{/}g;
+          $path =~ s{/[^/]+$}{/};
+          my $site_path = $app->blog->site_path;
+          $site_path =~ s{\\}{/}g;
+          $path    =~ s!$site_path!!;
+          my $out = qq {
+            <span>$path</span>
           };
           return $out;
         }

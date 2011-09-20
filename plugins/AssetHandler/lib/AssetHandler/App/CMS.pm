@@ -923,7 +923,7 @@ sub move_assets {
     $app->validate_magic or return;
     my $q = $app->{query};
     my $folder = $q->param('itemset_action_input') || '';
-    my @folders;
+    my @folders = split('/', $folder);
     map { $_ = dirify($_) } @folders;
     my $moved_flag;
     my @asset_ids = $q->param('id');

@@ -50,28 +50,37 @@ applications:
           order: 200
           permission: edit_assets
           condition: $AssetHandler::AssetHandler::Util::is_mt5
-          js_message: unlink
+          js_message: delete
         fix_path_tor:
           label: FullPath to %r
           code: $AssetHandler::AssetHandler::App::CMS::path_tor
           order: 310
           permission: edit_assets
           condition: $AssetHandler::AssetHandler::Util::is_blog_context
-          js_message: fix
+          js_message: edit
         fix_path_tofull:
           label: Flatten Path
           code: $AssetHandler::AssetHandler::App::CMS::flatten_path
           order: 320
           permission: edit_assets
           condition: $AssetHandler::AssetHandler::Util::is_blog_context
-          js_message: fix
+          js_message: edit
         fix_url:
           label: Fix wrong URL from Path
           code: $AssetHandler::AssetHandler::App::CMS::fix_url
           order: 330
           permission: edit_assets
           condition: $AssetHandler::AssetHandler::Util::is_blog_context
-          js_message: fix
+          js_message: edit
+        modify_path:
+          label: Modify File Path
+          code: $AssetHandler::AssetHandler::App::CMS::modify_path
+          order: 340
+          permission: edit_assets
+          condition: $AssetHandler::AssetHandler::Util::is_blog_context
+          input: 1
+          input_label: 'Specify a folder relative to the blog site path/URL to modify the selected asset(s) path to. Examples: enter a single folder ("assets/"), enter a subdirectory path ("my/asset/location/"), or modify assets to the blog root with "/".'
+          no_prompt: 1
         move_assets:
           label: Move Assets
           code: $AssetHandler::AssetHandler::App::CMS::move_assets

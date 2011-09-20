@@ -6,7 +6,7 @@ use MT::Util qw( format_ts relative_date caturl );
 use MT 4.0;
 use MT::Asset;
 use File::Spec;
-use MT::Util qw( format_ts relative_date );
+use MT::Util qw( format_ts relative_date dirify );
 use base qw( MT::Object );
 use AssetHandler::Util qw( is_user_can );
 
@@ -508,25 +508,47 @@ sub header_add_styles {
     1;
 }
 
+sub messaging_param {
+    my ($cb, $app, $param, $tmpl) = @_;
+    my $q = $app->query;
+
+    $param->{assets_moved} = $q->param('assets_moved') || '';
+    $param->{assets_not_moved} = $q->param('assets_not_moved') || '';
+}
+
 sub list_asset_src {
     my ( $cb, $app, $tmpl ) = @_;
     my ( $old, $new );
     # Add a saved status msg
-    if ( $app->param('saved') ) {
-        $old =
-            q{<$mt:include name="include/header.tmpl" id="header_include"$>};
-        $old = quotemeta($old);
-        $new = <<HTML;
+    $old =
+        q{<$mt:include name="include/header.tmpl" id="header_include"$>};
+    $old = quotemeta($old);
+    $new = <<HTML;
 <mt:setvarblock name="content_header" append="1">
-    <mtapp:statusmsg
-         id="saved"
-         class="success">
-         <__trans phrase="Your changes have been saved.">
-     </mtapp:statusmsg>
-</mt:setvarblock>   
+    <mt:if name="saved">
+        <mtapp:statusmsg
+            id="saved"
+            class="success">
+            <__trans phrase="Your changes have been saved.">
+        </mtapp:statusmsg>
+    </mt:if>
+    <mt:if name="assets_moved">
+        <mtapp:statusmsg
+            id="assets_moved"
+            class="success">
+            The selected asset(s) have been successfully moved. Be sure to republish and double-check for any existing use of the old URL!
+        </mtapp:statusmsg>
+    </mt:if>
+    <mt:if name="assets_not_moved">
+        <mtapp:statusmsg
+            id="assets_not_moved"
+            class="success">
+            The selected asset(s) have <em>not</em> been successfully moved. The selected asset(s) are not file-based or are missing.
+        </mtapp:statusmsg>
+    </mt:if>
+</mt:setvarblock>
 HTML
-        $$tmpl =~ s/($old)/$new\n$1/;
-    }
+    $$tmpl =~ s/($old)/$new\n$1/;
 }
 
 sub list_asset {
@@ -875,37 +897,72 @@ sub modify_path {
     if (! is_user_can( $blog, $user, 'edit_assets' ) ) {
         return MT->translate( 'Permission denied.' );
     }
+
     my $q = $app->{query};
     my @aids = $q->param ('id');
+    my $folder = $q->param('itemset_action_input') || '';
 
-    my %param;
-    $param{return_args} = '__mode=list_asset&blog_id=' . $blog->id;
-
-    my @items;
     foreach (@aids) {
         my $asset = MT::Asset->load ({ id => $_ })
             or next;
         if ( $asset->class =~ /image|audio|video|file|archive/) {
-            push @items, {
-                id => $asset->id,
-                name => $asset->label || $asset->file_name,
-                path => $asset->file_path,
-            };
+            my $local_path = File::Spec->catfile('%r', $folder, $asset->file_name);
+            $local_path =~ s!\\!/!g;
+            $asset->file_path($local_path);
+            $asset->url($local_path);
+            $asset->save
+              or die $asset->errstr;
         }
     }
-    $param{items} = \@items;
-    $param{old_path} = $blog->site_path;
 
-    my $plugin = MT->component('AssetPathFix');
-    my $tmpl = $plugin->load_tmpl('modify_itempath.tmpl');
-    my $content = $app->build_page($tmpl,\%param);
+    $app->add_return_arg( modified => 1 );
+    $app->call_return;
+}
 
+sub move_assets {
+    my ($app) = @_;
+    $app->validate_magic or return;
+    my $q = $app->{query};
+    my $folder = $q->param('itemset_action_input') || '';
+    map { $_ = dirify($_) } @folders;
+    my $moved_flag;
+    my @asset_ids = $q->param('id');
+    foreach my $asset_id (@asset_ids) {
+        my $asset = MT->model('asset')->load($asset_id)
+            or next;
+        next unless $asset->file_path && -e $asset->file_path;
+        my $blog = MT->model('blog')->load($asset->blog_id);
+        my $fmgr = $blog->file_mgr;
+        my $dest_path = File::Spec->catdir($blog->site_path, @folders);
+        if ( !$fmgr->exists($dest_path) ) {
+            $fmgr->mkpath($dest_path)
+                or die $fmgr->errstr;
+        }
+        my $dest_file = File::Spec->catfile($dest_path, $asset->file_name);
+        $fmgr->rename($asset->file_path, $dest_file)
+            or die $fmgr->errstr;
+        $asset->file_path(
+            File::Spec->catfile('%r', @folders, $asset->file_name)
+        );
+        $asset->url(
+            join('/', '%r', @folders) . '/' . $asset->file_name
+        );
+        $asset->save
+          or die $asset->errstr;
+        $moved_flag = 1;
+    }
+    $moved_flag 
+        ? $app->add_return_arg( assets_moved => 1 )
+        : $app->add_return_arg( assets_not_moved => 1 );
+    $app->call_return;
 }
 
 sub find_duplicated_assets {
     my ($app) = @_;
 
 }
+
+
 
 sub doLog {
     my ($msg) = @_; 

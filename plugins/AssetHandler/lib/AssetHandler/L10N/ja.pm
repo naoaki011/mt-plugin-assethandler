@@ -41,6 +41,7 @@ use vars qw( %Lexicon );
 		=> '選択したアイテムは移動されました。再構築を行い再度以前のURLを使用している箇所がないか確認をしてください。',
 	'The selected asset(s) have <em>not</em> been successfully moved. The selected asset(s) are not file-based or are missing.'
 		=>'選択したアイテムの移動に<em>失敗しました</em>。アイテムが見つかりませんでした。',
+	'Fix Datas' => 'データを修正する',
 );
 
 1;

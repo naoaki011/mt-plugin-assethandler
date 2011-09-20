@@ -296,12 +296,20 @@ list_properties:
         sub {
           my ($prop, $obj, $app) = @_;
           my $file_name = $obj->file_name;
-          my $width = $obj->image_width;
-          my $height = $obj->image_height;
-          my $out = qq {
-            <span>$file_name</span><span class="pixels"><br />
-            ($width px X $height px)</span>
-          };
+          my $out;
+          if ($obj->class eq 'image') {
+            my $width = $obj->image_width;
+            my $height = $obj->image_height;
+            $out = qq {
+              <span>$file_name</span><span class="pixels"><br />
+              ($width px X $height px)</span>
+            };
+          }
+          else {
+            $out = qq {
+              <span>$file_name</span>
+            };
+          }
           return $out;
         }
     url:

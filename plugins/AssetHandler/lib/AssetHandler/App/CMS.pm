@@ -781,7 +781,7 @@ sub unlink_asset {
         }
         $asset->SUPER::remove;
     }
-    $app->call_return( saved => 1 );
+    $app->call_return( deleted => 1 );
 }
 
 sub path_tor {
@@ -882,7 +882,7 @@ sub fix_url {
             $asset->save;
         }
     }
-    $app->call_return( fixed => 1 );
+    $app->call_return( modified => 1 );
 }
 
 sub modify_path {
@@ -915,8 +915,7 @@ sub modify_path {
         }
     }
 
-    $app->add_return_arg( modified => 1 );
-    $app->call_return;
+    $app->call_return( modified => 1 );
 }
 
 sub move_assets {

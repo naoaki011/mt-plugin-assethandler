@@ -90,6 +90,13 @@ applications:
           input: 1
           input_label: 'Specify a folder relative to the blog site path/URL to move the selected asset(s) to. Examples: enter a single folder ("assets/"), enter a subdirectory path ("my/asset/location/"), or move assets to the blog root with "/".'
           no_prompt: 1
+        fix_datas:
+          label: Fix Datas
+          code: $AssetHandler::AssetHandler::App::CMS::fix_datas
+          order: 360
+          permission: edit_assets
+          condition: $AssetHandler::AssetHandler::Util::is_blog_context
+          js_message: edit
     methods:
       asset_batch_editor: $AssetHandler::AssetHandler::App::CMS::open_batch_editor
 #      asset_batch_editor_listing: $AssetHandler::AssetHandler::App::CMS::open_batch_editor_listing

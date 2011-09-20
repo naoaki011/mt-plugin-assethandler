@@ -8,7 +8,7 @@ use MT::Asset;
 use File::Spec;
 use MT::Util qw( format_ts relative_date dirify );
 use base qw( MT::Object );
-use AssetHandler::Util qw( is_user_can );
+use AssetHandler::Util qw( is_user_can mime_type );
 
 sub open_batch_editor_listing {
     my ($app) = @_;
@@ -923,6 +923,7 @@ sub move_assets {
     $app->validate_magic or return;
     my $q = $app->{query};
     my $folder = $q->param('itemset_action_input') || '';
+    my @folders;
     map { $_ = dirify($_) } @folders;
     my $moved_flag;
     my @asset_ids = $q->param('id');
@@ -954,6 +955,37 @@ sub move_assets {
         ? $app->add_return_arg( assets_moved => 1 )
         : $app->add_return_arg( assets_not_moved => 1 );
     $app->call_return;
+}
+
+sub fix_datas {
+    my ($app) = @_;
+    my $blog = $app->blog;
+    if (! $blog ) {
+        return MT->translate( 'Invalid request.' );
+    }
+    $app->validate_magic()
+      or return MT->translate( 'Permission denied.' );
+    my $user = $app->user;
+    if (! is_user_can( $blog, $user, 'edit_assets' ) ) {
+        return MT->translate( 'Permission denied.' );
+    }
+
+    my $q = $app->{query};
+    my @aids = $q->param ('id');
+    my $site_url = $blog->site_url;
+
+    foreach (@aids) {
+        my $asset = MT::Asset->load ({ id => $_ })
+            or next;
+        my $file_path = $asset->url;
+        $file_path =~ s!$site_url!%r/!;
+        $asset->file_path($file_path);
+        $asset->mime_type( mime_type($asset->file_ext) );
+        $asset->save
+          or die $asset->errstr;
+    }
+
+    $app->call_return( modified => 1 );
 }
 
 sub find_duplicated_assets {

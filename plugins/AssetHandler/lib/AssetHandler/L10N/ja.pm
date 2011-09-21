@@ -42,6 +42,10 @@ use vars qw( %Lexicon );
 	'The selected asset(s) have <em>not</em> been successfully moved. The selected asset(s) are not file-based or are missing.'
 		=>'選択したアイテムの移動に<em>失敗しました</em>。アイテムが見つかりませんでした。',
 	'Fix Datas' => 'データを修正する',
+	'Rename Assets' => 'アイテム名を変更する',
+	'Specify a filename to rename the selected asset(s) to. Examples: examples.jpg or examples.'
+		=> '選択したアイテムの変更する名前を入力してください。 例: examples.jpg または example',
+	'Find Dupelicated' => '重複アイテムを探す',
 );
 
 1;

@@ -90,10 +90,19 @@ applications:
           input: 1
           input_label: 'Specify a folder relative to the blog site path/URL to move the selected asset(s) to. Examples: enter a single folder ("assets/"), enter a subdirectory path ("my/asset/location/"), or move assets to the blog root with "/".'
           no_prompt: 1
+        rename_assets:
+          label: Rename Assets
+          code: $AssetHandler::AssetHandler::App::CMS::rename_assets
+          order: 360
+          permission: upload
+          condition: $AssetHandler::AssetHandler::Util::is_blog_context
+          input: 1
+          input_label: 'Specify a filename to rename the selected asset(s) to. Examples: examples.jpg or examples.'
+          no_prompt: 1
         fix_datas:
           label: Fix Datas
           code: $AssetHandler::AssetHandler::App::CMS::fix_datas
-          order: 360
+          order: 370
           permission: edit_assets
           condition: $AssetHandler::AssetHandler::Util::is_blog_context
           js_message: edit

@@ -796,23 +796,21 @@ sub path_tor {
     if (! is_user_can( $blog, $user, 'edit_assets' ) ) {
         return MT->translate( 'Permission denied.' );
     }
-    my $site_path = $blog->site_path;
-    $site_path =~ s!\\!/!g;
+    (my $site_path = $blog->site_path) =~ s!\\!/!g;
     my $site_url = $blog->site_url;
     my @ids = $app->param('id');
     require MT::Asset;
     foreach my $id (@ids) {
         my $asset = MT::Asset->load($id);
         if ( $asset->class =~ /image|audio|video|file|archive/) {
-            my $file_path = $asset->file_path;
-            $file_path =~ s!\\!/!g;
+            (my $file_path = $asset->file_path) =~ s!\\!/!g;
             $file_path =~ s!$site_path!%r!;
             $asset->file_path( $file_path );
-            my $file_url = $asset->url;
-            $file_url =~ s!\\!/!g;
+            (my $file_url = $asset->url) =~ s!\\!/!g;
             $file_url =~ s!$site_url!%r/!;
             $asset->url( $file_url );
-            $asset->save;
+            $asset->save
+              or die $asset->errstr;
         }
     }
     $app->call_return( modified => 1 );
@@ -830,23 +828,21 @@ sub flatten_path {
     if (! is_user_can( $blog, $user, 'edit_assets' ) ) {
         return MT->translate( 'Permission denied.' );
     }
-    my $site_path = $blog->site_path;
-    $site_path =~ s!\\!/!g;
+    (my $site_path = $blog->site_path) =~ s!\\!/!g;
     my $site_url = $blog->site_url;
     my @ids = $app->param('id');
     require MT::Asset;
     foreach my $id (@ids) {
         my $asset = MT::Asset->load($id);
         if ( $asset->class =~ /image|audio|video|file|archive/) {
-            my $file_path = $asset->file_path;
-            $file_path =~ s!\\!/!g;
+            (my $file_path = $asset->file_path) =~ s!\\!/!g;
             $file_path =~ s!%r!$site_path!;
             $asset->file_path( $file_path );
-            my $file_url = $asset->url;
-            $file_url =~ s!\\!/!g;
+            (my $file_url = $asset->url) =~ s!\\!/!g;
             $file_url =~ s!%r/!$site_url!;
             $asset->url( $file_url );
-            $asset->save;
+            $asset->save
+              or die $asset->errstr;
         }
     }
     $app->call_return( modified => 1 );
@@ -864,22 +860,19 @@ sub fix_url {
     if (! is_user_can( $blog, $user, 'edit_assets' ) ) {
         return MT->translate( 'Permission denied.' );
     }
-    my $site_path = $blog->site_path;
-    $site_path =~ s!\\!/!g;
-    my $site_url = $blog->site_url;
+    (my $site_path = $blog->site_path) =~ s!\\!/!g;
     my @ids = $app->param('id');
     require MT::Asset;
     foreach my $id (@ids) {
         my $asset = MT::Asset->load($id);
         if ( $asset->class =~ /image|audio|video|file|archive/) {
-            my $file_path = $asset->file_path;
-            $file_path =~ s!\\!/!g;
+            (my $file_path = $asset->file_path) =~ s!\\!/!g;
             $file_path =~ s!$site_path!!;
-            my $url = $site_url . $file_path;
-            $url =~ s!$site_url!%r/!;
+            my $url = '%r' . $file_path;
             $url =~ s!//!/!;
             $asset->url( $url );
-            $asset->save;
+            $asset->save
+              or die $asset->errstr;
         }
     }
     $app->call_return( modified => 1 );
@@ -906,8 +899,7 @@ sub modify_path {
         my $asset = MT::Asset->load ({ id => $_ })
             or next;
         if ( $asset->class =~ /image|audio|video|file|archive/) {
-            my $local_path = File::Spec->catfile('%r', $folder, $asset->file_name);
-            $local_path =~ s!\\!/!g;
+            (my $local_path = File::Spec->catfile('%r', $folder, $asset->file_name)) =~ s!\\!/!g;
             $asset->file_path($local_path);
             $asset->url($local_path);
             $asset->save
@@ -920,7 +912,16 @@ sub modify_path {
 
 sub move_assets {
     my ($app) = @_;
-    $app->validate_magic or return;
+    my $blog = $app->blog;
+    if (! $blog ) {
+        return MT->translate( 'Invalid request.' );
+    }
+    $app->validate_magic()
+      or return MT->translate( 'Permission denied.' );
+    my $user = $app->user;
+    if (! is_user_can( $blog, $user, 'edit_assets' ) ) {
+        return MT->translate( 'Permission denied.' );
+    }
     my $q = $app->{query};
     my $folder = $q->param('itemset_action_input') || '';
     my @folders = split('/', $folder);
@@ -957,6 +958,56 @@ sub move_assets {
     $app->call_return;
 }
 
+sub rename_assets {
+    my ($app) = @_;
+    my $blog = $app->blog;
+    if (! $blog ) {
+        return MT->translate( 'Invalid request.' );
+    }
+    $app->validate_magic()
+      or return MT->translate( 'Permission denied.' );
+    my $user = $app->user;
+    if (! is_user_can( $blog, $user, 'edit_assets' ) ) {
+        return MT->translate( 'Permission denied.' );
+    }
+    my $q = $app->{query};
+    my $filename = $q->param('itemset_action_input') || '';
+    my $rename_flag;
+    my @asset_ids = $q->param('id');
+    foreach my $asset_id (@asset_ids) {
+        my $asset = MT->model('asset')->load($asset_id)
+            or next;
+        my $blog = MT->model('blog')->load($asset->blog_id);
+        (my $basename = $filename) =~ s{\..+?$}{};
+        if ( $basename eq $filename ) {
+            $filename .= '.' . $asset->file_ext;
+        }
+        (my $folder = $asset->file_path) =~ s{\\}{/}g;
+        $folder =~ s{/[^/]+$}{/};
+        my $dest_path = File::Spec->catdir($folder, $filename);
+        my $fmgr = $blog->file_mgr;
+        if ( $fmgr->exists($dest_path) ) {
+            $rename_flag = 1;
+        }
+        else {
+            $fmgr->rename($asset->file_path, $dest_path)
+              or die $fmgr->errstr;
+            $dest_path =~ s{\\}{/}g;
+            (my $site_path = $blog->site_path) =~ s{\\}{/}g;
+            $dest_path =~ s!$site_path!%r!;
+            $asset->file_path( $dest_path );
+            $asset->url( $dest_path );
+            $asset->file_name( $filename );
+            $asset->save
+              or die $asset->errstr;
+        }
+    }
+    $rename_flag 
+        ? $app->add_return_arg( assets_renamed => 1 )
+        : $app->add_return_arg( error => 1 );
+    $app->call_return;
+}
+
 sub fix_datas {
     my ($app) = @_;
     my $blog = $app->blog;
@@ -977,10 +1028,21 @@ sub fix_datas {
     foreach (@aids) {
         my $asset = MT::Asset->load ({ id => $_ })
             or next;
-        my $file_path = $asset->url;
-        $file_path =~ s!$site_url!%r/!;
+        (my $file_path = $asset->url) =~ s!$site_url!%r/!;
+        $file_path =~ s!\\!/!;
+        $file_path =~ s!//!/!;
+        $asset->url($file_path);
         $asset->file_path($file_path);
         $asset->mime_type( mime_type($asset->file_ext) );
+        if ($asset->file_name eq $asset->label) {
+            (my $file_name = $asset->url) =~ s{^.*/}{};
+            $asset->file_name($file_name);
+            $asset->label($file_name);
+        }
+        else {
+            (my $file_name = $asset->url) =~ s{^.*/}{};
+            $asset->file_name($file_name);
+        }
         $asset->save
           or die $asset->errstr;
     }
@@ -988,12 +1050,12 @@ sub fix_datas {
     $app->call_return( modified => 1 );
 }
 
-sub find_duplicated_assets {
+sub find_duplicated {
     my ($app) = @_;
 
+
+
 }
-
-
 
 sub doLog {
     my ($msg) = @_; 

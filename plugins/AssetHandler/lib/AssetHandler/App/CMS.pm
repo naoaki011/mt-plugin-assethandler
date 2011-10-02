@@ -2,12 +2,11 @@ package AssetHandler::App::CMS;
 
 use strict;
 use warnings;
-use MT::Util qw( format_ts relative_date caturl );
+use base qw( MT::Object );
 use MT 4.0;
 use MT::Asset;
+use MT::Util qw( format_ts relative_date caturl dirify );
 use File::Spec;
-use MT::Util qw( format_ts relative_date dirify );
-use base qw( MT::Object );
 use AssetHandler::Util qw( is_user_can mime_type );
 
 sub open_batch_editor_listing {
@@ -714,14 +713,14 @@ HERE
 
     $$tmpl =~ s/$old/$new/;
 
-    my $old = <<HERE;
+    $old = <<HERE;
             </tr>
     <mt:if __last__>
         </tbody>
 HERE
     $old = quotemeta($old);
 
-    my $new = <<HERE;
+    $new = <<HERE;
                 <td>
     <mt:if name="appears_in">
         <mt:loop name="appears_in">

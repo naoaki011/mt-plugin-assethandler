@@ -532,9 +532,11 @@ list_properties:
                 my $has_label = 0;
                 for my $label_col qw( name title label ) {
                   if ($obj->has_column($label_col)) {
-                     $html .= '<a href="' . $url . '" title="(' . $obj->class_label . ')' . $obj->column($label_col) . '">' . $obj->column($label_col) . '</a>';
-                     $has_label = 1;
-                     last;
+                    if ($obj->column($label_col)) {
+                      $html .= '<a href="' . $url . '" title="(' . $obj->class_label . ')' . $obj->column($label_col) . '">' . $obj->column($label_col) . '</a>';
+                      $has_label = 1;
+                      last;
+                    }
                   }
                 }
                 if (!$has_label) {

@@ -465,56 +465,6 @@ sub print_transport_progress {
     }
 }
 
-sub header_add_styles {
-    my ($cb, $app, $param, $tmpl) = @_;
-    return 1 if (($app->param('__mode') ne 'list') || ($app->param('_type') ne 'asset'));
-    my $heads = $tmpl->getElementsByTagName('setvarblock');
-    my $head;
-    foreach (@$heads) {
-        if ( $_->attributes->{name} =~ /html_head$/ ) {
-            $head = $_;
-            last;
-        }
-    }
-    return 1 unless $head;
-    require MT::Template;
-    bless $head, 'MT::Template::Node';
-    my $html_head = $tmpl->createElement( 'setvarblock',
-        { name => 'html_head', append => 1 } );
-    my $innerHTML = q{
-<style type="text/css">
-#asset-table th.parent {
-    display: table-cell;
-    width: 8em;
-}
-#asset-table th.class {
-    width: 8em;
-}
-#asset-table th.file_name {
-    width: 20em;
-}
-#asset-table th.tags {
-    width: 12em;
-}
-#asset-table td.parent {
-    display: block;
-    width: auto;
-}
-</style>
-};
-    $html_head->innerHTML($innerHTML);
-    $tmpl->insertBefore( $html_head, $head );
-    1;
-}
-
-sub messaging_param {
-    my ($cb, $app, $param, $tmpl) = @_;
-    my $q = $app->query;
-
-    $param->{assets_moved} = $q->param('assets_moved') || '';
-    $param->{assets_not_moved} = $q->param('assets_not_moved') || '';
-}
-
 sub list_asset_src {
     my ( $cb, $app, $tmpl ) = @_;
     my ( $old, $new );
@@ -548,6 +498,70 @@ sub list_asset_src {
 </mt:setvarblock>
 HTML
     $$tmpl =~ s/($old)/$new\n$1/;
+}
+
+sub messaging_param {
+    my ($cb, $app, $param, $tmpl) = @_;
+    my $q = $app->query;
+
+    $param->{assets_moved} = $q->param('assets_moved') || '';
+    $param->{assets_not_moved} = $q->param('assets_not_moved') || '';
+}
+
+sub asset_table {
+    my ($cb, $app, $tmpl) = @_;
+
+    my $old = <<HERE;
+                <th class="created-on"><__trans phrase="Created On"></th>
+            </tr>
+        </mt:setvarblock>
+HERE
+    $old = quotemeta($old);
+
+    my $new = <<HERE;
+                <th class="created-on"><__trans phrase="Created On"></th>
+                <th class="created-on"><__trans phrase="Appears in..."></th>
+                <th class="created-on"><__trans phrase="Folder"></th>
+            </tr>
+        </mt:setvarblock>
+HERE
+
+    $$tmpl =~ s/$old/$new/;
+
+    $old = <<HERE;
+            </tr>
+    <mt:if __last__>
+        </tbody>
+HERE
+    $old = quotemeta($old);
+
+    $new = <<HERE;
+                <td>
+    <mt:if name="appears_in">
+        <mt:loop name="appears_in">
+        <mt:if name="__first__">
+        <ul>
+        </mt:if>
+            <li><a href="<mt:var name="script_url">?__mode=edit&amp;_type=<mt:var name="class">&amp;blog_id=<mt:var name="blog_id" escape="url">&amp;id=<mt:var name="id" escape="url">" class="icon-left icon-<mt:var name="class" lower_case="1">"><mt:var name="title" escape="html" default="..."></a></li>
+        <mt:if name="__last__">
+        </ul>
+        </mt:if>
+        </mt:loop>
+        <mt:if name="appears_in_more">
+        <p><a href="<mt:var name="script_url">?__mode=list_entry&amp;blog_id=<mt:var name="blog_id" escape="url">&amp;filter=asset_id&amp;filter_val=<mt:var name="id" escape="url">"><__trans phrase="Show all entries"></a></p>
+        <p><a href="<mt:var name="script_url">?__mode=list_page&amp;blog_id=<mt:var name="blog_id" escape="url">&amp;filter=asset_id&amp;filter_val=<mt:var name="id" escape="url">"><__trans phrase="Show all pages"></a></p>
+        </mt:if>
+    <mt:else>
+        <span class="hint"><__trans phrase="This asset has not been used."></span>
+    </mt:if>
+                </td>
+                <td><mt:var name="folder" /></td>
+            </tr>
+    <mt:if __last__>
+        </tbody>
+HERE
+
+    $$tmpl =~ s/$old/$new/;
 }
 
 sub list_asset {
@@ -693,60 +707,46 @@ sub list_asset {
     };
 }
 
-sub asset_table {
-    my ($cb, $app, $tmpl) = @_;
-
-    my $old = <<HERE;
-                <th class="created-on"><__trans phrase="Created On"></th>
-            </tr>
-        </mt:setvarblock>
-HERE
-    $old = quotemeta($old);
-
-    my $new = <<HERE;
-                <th class="created-on"><__trans phrase="Created On"></th>
-                <th class="created-on"><__trans phrase="Appears in..."></th>
-                <th class="created-on"><__trans phrase="Folder"></th>
-            </tr>
-        </mt:setvarblock>
-HERE
-
-    $$tmpl =~ s/$old/$new/;
-
-    $old = <<HERE;
-            </tr>
-    <mt:if __last__>
-        </tbody>
-HERE
-    $old = quotemeta($old);
-
-    $new = <<HERE;
-                <td>
-    <mt:if name="appears_in">
-        <mt:loop name="appears_in">
-        <mt:if name="__first__">
-        <ul>
-        </mt:if>
-            <li><a href="<mt:var name="script_url">?__mode=edit&amp;_type=<mt:var name="class">&amp;blog_id=<mt:var name="blog_id" escape="url">&amp;id=<mt:var name="id" escape="url">" class="icon-left icon-<mt:var name="class" lower_case="1">"><mt:var name="title" escape="html" default="..."></a></li>
-        <mt:if name="__last__">
-        </ul>
-        </mt:if>
-        </mt:loop>
-        <mt:if name="appears_in_more">
-        <p><a href="<mt:var name="script_url">?__mode=list_entry&amp;blog_id=<mt:var name="blog_id" escape="url">&amp;filter=asset_id&amp;filter_val=<mt:var name="id" escape="url">"><__trans phrase="Show all entries"></a></p>
-        <p><a href="<mt:var name="script_url">?__mode=list_page&amp;blog_id=<mt:var name="blog_id" escape="url">&amp;filter=asset_id&amp;filter_val=<mt:var name="id" escape="url">"><__trans phrase="Show all pages"></a></p>
-        </mt:if>
-    <mt:else>
-        <span class="hint"><__trans phrase="This asset has not been used."></span>
-    </mt:if>
-                </td>
-                <td><mt:var name="folder" /></td>
-            </tr>
-    <mt:if __last__>
-        </tbody>
-HERE
-
-    $$tmpl =~ s/$old/$new/;
+sub header_add_styles {
+    my ($cb, $app, $param, $tmpl) = @_;
+    return 1 if ((($app->param('__mode') || '') ne 'list') || (($app->param('_type') || '') ne 'asset'));
+    my $heads = $tmpl->getElementsByTagName('setvarblock');
+    my $head;
+    foreach (@$heads) {
+        if ( $_->attributes->{name} =~ /html_head$/ ) {
+            $head = $_;
+            last;
+        }
+    }
+    return 1 unless $head;
+    require MT::Template;
+    bless $head, 'MT::Template::Node';
+    my $html_head = $tmpl->createElement( 'setvarblock',
+        { name => 'html_head', append => 1 } );
+    my $innerHTML = q{
+<style type="text/css">
+#asset-table th.parent {
+    display: table-cell;
+    width: 8em;
+}
+#asset-table th.class {
+    width: 8em;
+}
+#asset-table th.file_name {
+    width: 20em;
+}
+#asset-table th.tags {
+    width: 12em;
+}
+#asset-table td.parent {
+    display: block;
+    width: auto;
+}
+</style>
+};
+    $html_head->innerHTML($innerHTML);
+    $tmpl->insertBefore( $html_head, $head );
+    1;
 }
 
 sub unlink_asset {

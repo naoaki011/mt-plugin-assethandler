@@ -540,7 +540,7 @@ list_properties:
                   }
                 }
                 if (!$has_label) {
-                  $html .= '<a href="' . $url . '" title="(' . $obj->class_label . ')' . $obj->id . '">(' . $obj->class_label . ')ID:' . $obj->id . '</a>';
+                  $html .= '(' . $obj->class_label . ')<a href="' . $url . '" title="(' . $obj->class_label . ')' . $obj->id . '">ID:' . $obj->id . '</a>';
                 }
                 $html .= '</li>';
               }

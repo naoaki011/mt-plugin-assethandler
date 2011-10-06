@@ -465,7 +465,7 @@ sub print_transport_progress {
     }
 }
 
-sub list_asset_src {
+sub cb_list_asset_src {
     my ( $cb, $app, $tmpl ) = @_;
     my ( $old, $new );
     # Add a saved status msg
@@ -500,7 +500,7 @@ HTML
     $$tmpl =~ s/($old)/$new\n$1/;
 }
 
-sub messaging_param {
+sub cb_list_asset_param {
     my ($cb, $app, $param, $tmpl) = @_;
     my $q = $app->query;
 
@@ -508,7 +508,7 @@ sub messaging_param {
     $param->{assets_not_moved} = $q->param('assets_not_moved') || '';
 }
 
-sub asset_table {
+sub cb_asset_table {
     my ($cb, $app, $tmpl) = @_;
 
     my $old = <<HERE;
@@ -564,7 +564,7 @@ HERE
     $$tmpl =~ s/$old/$new/;
 }
 
-sub list_asset {
+sub cb_list_asset {
     my ($cb, $app, $terms, $args, $param, $hasher) = @_;
 
     my $default_thumb_width = 75;
@@ -707,7 +707,7 @@ sub list_asset {
     };
 }
 
-sub header_add_styles {
+sub cb_header_param {
     my ($cb, $app, $param, $tmpl) = @_;
     return 1 if ((($app->param('__mode') || '') ne 'list') || (($app->param('_type') || '') ne 'asset'));
     my $heads = $tmpl->getElementsByTagName('setvarblock');

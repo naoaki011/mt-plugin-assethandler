@@ -16,11 +16,11 @@ plugin_link: https://github.com/naoaki011/mt-plugin-assethandler
 description: <__trans phrase="AssetHandler allows you to mass import and manage assets in Movable Type">
 
 callbacks:
-  MT::App::CMS::template_source.list_asset: $AssetHandler::AssetHandler::App::CMS::list_asset_src
-  MT::App::CMS::template_param.list_asset: $AssetHandler::AssetHandler::App::CMS::messaging_param
-  MT::App::CMS::template_source.asset_table: $AssetHandler::AssetHandler::App::CMS::asset_table
-  app_pre_listing_list_asset: $AssetHandler::AssetHandler::App::CMS::list_asset
-  template_param.header: $AssetHandler::AssetHandler::App::CMS::header_add_styles
+  MT::App::CMS::template_source.list_asset: $AssetHandler::AssetHandler::App::CMS::cb_list_asset_src
+  MT::App::CMS::template_param.list_asset: $AssetHandler::AssetHandler::App::CMS::cb_list_asset_param
+  MT::App::CMS::template_source.asset_table: $AssetHandler::AssetHandler::App::CMS::cb_asset_table
+  app_pre_listing_list_asset: $AssetHandler::AssetHandler::App::CMS::cb_list_asset
+  template_param.header: $AssetHandler::AssetHandler::App::CMS::cb_header_param
 applications:
   cms:
     page_actions:

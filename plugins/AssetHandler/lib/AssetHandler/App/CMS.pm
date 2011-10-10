@@ -316,9 +316,17 @@ sub transport {
 sub _process_transport {
     my $app = shift;
     my ($param) = @_;
-    require MT::Blog;
-    my $blog_id    = $app->param('blog_id');
-    my $blog       = MT::Blog->load($blog_id);
+    my $blog = $app->blog
+      or return;
+    if (! $blog ) {
+        return MT->translate( 'Invalid request.' );
+    }
+    $app->validate_magic()
+      or return MT->translate( 'Permission denied.' );
+    my $user = $app->user;
+    if (! is_user_can( $blog, $user, 'upload' ) ) {
+        return MT->translate( 'Permission denied.' );
+    }
     my $local_file = $param->{full_path};
     my $url        = $param->{full_url};   
     my $bytes      = -s $local_file;
@@ -343,19 +351,21 @@ sub _process_transport {
     my ( $w, $h, $id ) = Image::Size::imgsize($fh);
     ## Close up the filehandle.
     close $fh;
+    (my $site_path = $blog->site_path) =~ s!\\!/!g;
+    $local_file =~ s!$site_path!%r!;
     require MT::Asset;
     my $asset_pkg = MT::Asset->handler_for_file($local_basename);
     my $is_image  = defined($w)
         && defined($h)
         && $asset_pkg->isa('MT::Asset::Image');
-    my $asset;
-    if (
-        !(
-            $asset = $asset_pkg->load(
-                { file_path => $local_file, blog_id => $blog_id }
-            )
-        )
-    ) {
+    my $asset = $asset_pkg->load({
+        'file_path' => $local_file,
+        'blog_id' => $blog->id,
+    }) || $asset_pkg->new;
+    if ($asset->id) {
+        $asset->modified_by( $app->user->id );
+    }
+    else {
         my $site_path = $blog->site_path;
         $site_path    =~ s!\\!/!g;
         my $file_path = $local_file;
@@ -365,12 +375,9 @@ sub _process_transport {
         $asset->file_path($file_path);
         $asset->file_name($local_basename);
         $asset->file_ext($ext);
-        $asset->blog_id($blog_id);
+        $asset->blog_id($blog->id);
         $asset->created_by( $app->user->id );
-    } else {
-        $asset->modified_by( $app->user->id );
     }
-
     my $site_url = $blog->site_url;
     $url =~ s!\\!/!g;
     $url =~ s!$site_url!%r/!;
@@ -442,7 +449,6 @@ sub _process_transport {
             blog  => $blog
         );
     }
-
 }
 
 sub print_transport_progress {

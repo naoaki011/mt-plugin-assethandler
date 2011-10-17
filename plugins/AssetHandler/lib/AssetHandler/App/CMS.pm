@@ -9,34 +9,41 @@ use MT::Util qw( format_ts relative_date caturl dirify );
 use File::Spec;
 use AssetHandler::Util qw( is_user_can mime_type );
 
-sub open_batch_editor_listing {
-    my ($app) = @_;
-    my $plugin     = MT->component('AssetHandler');
-    my @ids = $app->param('id');
-
-    my $blog = $app->blog;
-    if (! $blog ) {
-        return MT->translate( 'Invalid request.' );
-    }
+sub open_batch_editor {
+    my $app = shift;
+    my ($param) = @_;
+    $param ||= {};
+    my @ids = $app->param('id')
+      or return "Invalid request.";
+    my $type = $app->param('_type');
+    my $pkg = $app->model($type)
+      or return "Invalid request.";
+    my $q       = $app->param;
+    my $blog_id = $q->param('blog_id');
+    return MT->translate( 'Invalid request.' )
+        unless $blog_id;
+    my $blog = $app->model('blog')->load($blog_id);
+    return MT->translate( 'Invalid request.' )
+        unless $blog;
     $app->validate_magic()
       or return MT->translate( 'Permission denied.' );
     my $user = $app->user;
     if (! is_user_can( $blog, $user, 'edit_assets' ) ) {
         return MT->translate( 'Permission denied.' );
     }
-    my $blog_id = $blog->id;
+
     my $auth_prefs = $app->user->entry_prefs;
     my $tag_delim  = chr( $auth_prefs->{tag_delim} );
     require File::Basename;
+    require File::Spec;
     require JSON;
-    # require MT::Author;
     require MT::Tag;
     my $hasher = sub {
         my ( $obj, $row ) = @_;
         my $blog = $obj->blog;
         $row->{blog_name} = $blog ? $blog->name : '-';
-        $row->{file_path} = $obj->file_path; # has to be called to calculate
-        $row->{url} = $obj->url; # this has to be called to calculate
+        $row->{file_path} = $obj->file_path;
+        $row->{url} = $obj->url;
         $row->{file_name} = File::Basename::basename( $row->{file_path} );
         my $meta = $obj->metadata;
         $row->{file_label} = $obj->label;
@@ -44,7 +51,7 @@ sub open_batch_editor_listing {
             my @stat = stat( $row->{file_path} );
             my $size = $stat[7];
             my ($thumb_file) =
-                $obj->thumbnail_url( Height => 220, Width => 300 );
+                $obj->thumbnail_url( Height => 240, Width => 240 );
             $row->{thumbnail_url} = $meta->{thumbnail_url} = $thumb_file;
             $row->{asset_class} = $obj->class_label;
             $row->{file_size}   = $size;
@@ -64,111 +71,23 @@ sub open_batch_editor_listing {
             $row->{file_is_missing} = 1;
         }
         my $ts = $obj->created_on;
-        $row->{metadata_json} = JSON::objToJson($meta);
+        $row->{metadata_json} = JSON::to_json($meta);
         my $tags = MT::Tag->join( $tag_delim, $obj->tags );
         $row->{tags} = $tags;
     };
-    require File::Spec;
-
     return $app->listing( {
-        terms => { id => \@ids, blog_id => $app->param('blog_id') },
-        args => { sort => 'created_on', direction => 'descend' },
-        type => 'asset',
-        code => $hasher,
-        template => File::Spec->catdir( $plugin->path, 'tmpl', 'asset_batch_editor.tmpl' ),
-        params => { (
-                $blog_id
-                ? ( blog_id      => $blog_id,
-                    edit_blog_id => $blog_id,
-                  ) 
-                : ( system_overview => 1 )
-            ),
-            saved => $app->param('saved') || 0,
-            return_args => "__mode=list&_type=asset&blog_id=$blog_id"
-        }
-    });
-}
-
-sub open_batch_editor {
-    my ($app) = @_;
-    my $plugin     = MT->component('AssetHandler');
-    my @ids = $app->param('id');
-
-    my $blog = $app->blog;
-    if (! $blog ) {
-        return MT->translate( 'Invalid request.' );
-    }
-    $app->validate_magic()
-      or return MT->translate( 'Permission denied.' );
-    my $user = $app->user;
-    if (! is_user_can( $blog, $user, 'upload' ) ) {
-        return MT->translate( 'Permission denied.' );
-    }
-    my $blog_id = $app->param('blog_id');
-    my $auth_prefs = $app->user->entry_prefs;
-    my $tag_delim  = chr( $auth_prefs->{tag_delim} );
-    require File::Basename;
-    require JSON;
-    # require MT::Author;
-    require MT::Tag;
-    my $hasher = sub {
-        my ( $obj, $row ) = @_;
-        my $blog = $obj->blog;
-        $row->{blog_name} = $blog ? $blog->name : '-';
-        $row->{file_path} = $obj->file_path; # has to be called to calculate
-        $row->{url} = $obj->url; # this has to be called to calculate
-        $row->{file_name} = File::Basename::basename( $row->{file_path} );
-        my $meta = $obj->metadata;
-        $row->{file_label} = $obj->label;
-        if ( -f $row->{file_path} ) {
-            my @stat = stat( $row->{file_path} );
-            my $size = $stat[7];
-            my ($thumb_file) =
-                $obj->thumbnail_url( Height => 220, Width => 300 );
-            $row->{thumbnail_url} = $meta->{thumbnail_url} = $thumb_file;
-            $row->{asset_class} = $obj->class_label;
-            $row->{file_size}   = $size;
-            if ( $size < 1024 ) {
-                $row->{file_size_formatted} = sprintf( "%d Bytes", $size );
-            }
-            elsif ( $size < 1024000 ) {
-                $row->{file_size_formatted} =
-                    sprintf( "%.1f KB", $size / 1024 );
-            }
-            else {
-                $row->{file_size_formatted} =
-                    sprintf( "%.1f MB", $size / 1024000 );
-            }
-        }
-        else {
-            $row->{file_is_missing} = 1;
-        }
-        my $ts = $obj->created_on;
-        $row->{metadata_json} = JSON::objToJson($meta);
-        my $tags = MT::Tag->join( $tag_delim, $obj->tags );
-        $row->{tags} = $tags;
-    };
-    require File::Spec;
-    return $app->listing( {
-            terms => { id => \@ids, blog_id => $app->param('blog_id') },
+            terms => { id => \@ids, blog_id => $blog_id },
             args => { sort => 'created_on', direction => 'descend' },
             type => 'asset',
-            code => $hasher,
-            template => File::Spec->catdir(
-                $plugin->path, 'tmpl', 'asset_batch_editor.tmpl'
-            ),
-            params => { (
-                    $blog_id
-                    ? ( blog_id      => $blog_id,
+            template => 'asset_batch_editor.tmpl',
+            params => {
+                blog_id      => $blog_id,
                         edit_blog_id => $blog_id,
-                      ) 
-                    : ( system_overview => 1 )
-                ),
                 saved => $app->param('saved') || 0,
                 return_args => "__mode=list&_type=asset&blog_id=$blog_id"
-            }
-        }
-    );
+            },
+            code => $hasher
+    });
 }
 
 sub save_assets {

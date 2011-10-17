@@ -140,14 +140,14 @@ list_actions:
       order: 200
       button: 1
       permission: upload
-#    batch_editor:
-#      label: Batch Edit
-#      code: $AssetHandler::AssetHandler::App::CMS::open_batch_editor_listing
-#      condition: $AssetHandler::AssetHandler::Util::is_blog_context
-#      order: 300
-#      no_prompt: 1
-#      button: 1
-#      permission: upload
+    batch_editor:
+      label: Batch Edit
+      code: $AssetHandler::AssetHandler::App::CMS::open_batch_editor
+      condition: $AssetHandler::AssetHandler::Util::is_blog_context
+      order: 300
+      no_prompt: 1
+      button: 1
+      permission: edit_assets
 list_properties:
   asset:
     label:

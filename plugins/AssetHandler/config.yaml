@@ -100,7 +100,7 @@ applications:
           input_label: 'Specify a filename to rename the selected asset(s) to. Examples: examples.jpg or examples.'
           no_prompt: 1
         fix_datas:
-          label: Fix Datas
+          label: Fix AssetDatas
           code: $AssetHandler::AssetHandler::App::CMS::fix_datas
           order: 370
           permission: edit_assets
@@ -108,7 +108,6 @@ applications:
           js_message: edit
     methods:
       asset_batch_editor: $AssetHandler::AssetHandler::App::CMS::open_batch_editor
-#      asset_batch_editor_listing: $AssetHandler::AssetHandler::App::CMS::open_batch_editor_listing
       save_assets: $AssetHandler::AssetHandler::App::CMS::save_assets
       asset_import: $AssetHandler::AssetHandler::App::CMS::start_transporter
       handle_transport_assets: $AssetHandler::AssetHandler::App::CMS::transport

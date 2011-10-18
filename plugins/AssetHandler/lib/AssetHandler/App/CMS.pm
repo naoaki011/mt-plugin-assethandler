@@ -42,6 +42,7 @@ sub open_batch_editor {
         my ( $obj, $row ) = @_;
         my $blog = $obj->blog;
         $row->{blog_name} = $blog ? $blog->name : '-';
+        $row->{class} = $obj->class;
         $row->{file_path} = $obj->file_path;
         $row->{url} = $obj->url;
         $row->{file_name} = File::Basename::basename( $row->{file_path} );
@@ -66,11 +67,32 @@ sub open_batch_editor {
                 $row->{file_size_formatted} =
                     sprintf( "%.1f MB", $size / 1024000 );
             }
+            $row->{image_width} = $meta->{image_width};
+            $row->{image_height} = $meta->{image_height};
         }
         else {
             $row->{file_is_missing} = 1;
         }
-        my $ts = $obj->created_on;
+        if ( my $by = $obj->created_by ) {
+            my $user = MT::Author->load($by);
+            $row->{created_by} = $user ? $user->name : '';
+        }
+        my $created_on = $obj->created_on;
+        if ($created_on) {
+            $row->{created_on_formatted} =
+              format_ts( MT::App::CMS::LISTING_DATE_FORMAT, $created_on, $blog, $app->user ? $app->user->preferred_language : undef );
+            $row->{created_on_time_formatted} =
+              format_ts( MT::App::CMS::LISTING_TIMESTAMP_FORMAT, $created_on, $blog, $app->user ? $app->user->preferred_language : undef );
+            $row->{created_on_relative} = relative_date( $created_on, time, $blog );
+        }
+        my $modified_on = $obj->modified_on;
+        if ($modified_on) {
+            $row->{modified_on_formatted} =
+              format_ts( MT::App::CMS::LISTING_DATE_FORMAT, $modified_on, $blog, $app->user ? $app->user->preferred_language : undef );
+            $row->{modified_on_time_formatted} =
+              format_ts( MT::App::CMS::LISTING_TIMESTAMP_FORMAT, $modified_on, $blog, $app->user ? $app->user->preferred_language : undef );
+            $row->{modified_on_relative} = relative_date( $modified_on, time, $blog );
+        }
         $row->{metadata_json} = JSON::to_json($meta);
         my $tags = MT::Tag->join( $tag_delim, $obj->tags );
         $row->{tags} = $tags;
@@ -125,6 +147,17 @@ sub save_assets {
     $app->call_return( saved => 1 );
 }
 
+sub cancel_assets {
+    my ($app) = @_;
+    my $blog = $app->blog;
+    if (! $blog ) {
+        return MT->translate( 'Invalid request.' );
+    }
+    $app->validate_magic()
+     or return MT->translate( 'Permission denied.' );
+    $app->call_return( );
+}
+
 sub start_transporter {
     my ($app) = @_;    
     my $plugin = MT->component('AssetHandler');
@@ -157,7 +190,6 @@ sub transport {
         $blog_id,
         (MT::Blog->errstr || "Blog not found")
       );
-
     $app->validate_magic()
       or return MT->translate( 'Permission denied.' );
     my $user = $app->user;
@@ -390,49 +422,6 @@ sub print_transport_progress {
     }
 }
 
-sub cb_list_asset_src {
-    my ( $cb, $app, $tmpl ) = @_;
-    my ( $old, $new );
-    # Add a saved status msg
-    $old =
-        q{<$mt:include name="include/header.tmpl" id="header_include"$>};
-    $old = quotemeta($old);
-    $new = <<HTML;
-<mt:setvarblock name="content_header" append="1">
-    <mt:if name="saved">
-        <mtapp:statusmsg
-            id="saved"
-            class="success">
-            <__trans phrase="Your changes have been saved.">
-        </mtapp:statusmsg>
-    </mt:if>
-    <mt:if name="assets_moved">
-        <mtapp:statusmsg
-            id="assets_moved"
-            class="success">
-            The selected asset(s) have been successfully moved. Be sure to republish and double-check for any existing use of the old URL!
-        </mtapp:statusmsg>
-    </mt:if>
-    <mt:if name="assets_not_moved">
-        <mtapp:statusmsg
-            id="assets_not_moved"
-            class="success">
-            The selected asset(s) have <em>not</em> been successfully moved. The selected asset(s) are not file-based or are missing.
-        </mtapp:statusmsg>
-    </mt:if>
-</mt:setvarblock>
-HTML
-    $$tmpl =~ s/($old)/$new\n$1/;
-}
-
-sub cb_list_asset_param {
-    my ($cb, $app, $param, $tmpl) = @_;
-    my $q = $app->query;
-
-    $param->{assets_moved} = $q->param('assets_moved') || '';
-    $param->{assets_not_moved} = $q->param('assets_not_moved') || '';
-}
-
 sub cb_asset_table {
     my ($cb, $app, $tmpl) = @_;
 
@@ -489,7 +478,7 @@ HERE
     $$tmpl =~ s/$old/$new/;
 }
 
-sub cb_list_asset {
+sub cb_list_asset_pre_listing {
     my ($cb, $app, $terms, $args, $param, $hasher) = @_;
 
     my $default_thumb_width = 75;
@@ -632,9 +621,23 @@ sub cb_list_asset {
     };
 }
 
+sub cb_list_param_asset {
+    my $cb = shift;
+    my ( $app, $param, $tmpl ) = @_;
+
+    my $saved = ( $app->param('saved') || 0 );
+    $param->{saved} = $saved;
+    my $moved = ( $app->param('assets_moved') || 0 );
+    $param->{assets_moved} = $moved;
+    my $not_moved = ( $app->param('assets_not_moved') || 0 );
+    $param->{assets_not_moved} = $not_moved;
+}
+
 sub cb_header_param {
     my ($cb, $app, $param, $tmpl) = @_;
-    return 1 if ((($app->param('__mode') || '') ne 'list') || (($app->param('_type') || '') ne 'asset'));
+    return 1
+      if ((($app->param('__mode') || '') ne 'list') || (($app->param('_type') || '') ne 'asset'));
+
     my $heads = $tmpl->getElementsByTagName('setvarblock');
     my $head;
     foreach (@$heads) {
@@ -644,6 +647,7 @@ sub cb_header_param {
         }
     }
     return 1 unless $head;
+
     require MT::Template;
     bless $head, 'MT::Template::Node';
     my $html_head = $tmpl->createElement( 'setvarblock',
@@ -668,10 +672,32 @@ sub cb_header_param {
     width: auto;
 }
 </style>
+<mt:setvarblock name="content_header" append="1">
+<mt:if name="saved">
+    <mtapp:statusmsg
+     id="saved"
+     class="success">
+      <__trans phrase="Your changes have been saved.">
+    </mtapp:statusmsg>
+</mt:if>
+<mt:if name="assets_moved">
+    <mtapp:statusmsg
+     id="assets_moved"
+     class="success">
+      The selected asset(s) has been successfully moved. Be sure to republish and double-check for any existing use of the old URL!
+    </mtapp:statusmsg>
+</mt:if>
+<mt:if name="assets_not_moved">
+    <mtapp:statusmsg
+     id="assets_not_moved"
+     class="success">
+      Some selected asset(s) has <em>not</em> been moved. The selected asset(s) are not file-based or are missing.
+    </mtapp:statusmsg>
+</mt:if>
+</mt:setvarblock>
 };
     $html_head->innerHTML($innerHTML);
     $tmpl->insertBefore( $html_head, $head );
-    1;
 }
 
 sub unlink_asset {
@@ -972,13 +998,6 @@ sub fix_datas {
     }
 
     $app->call_return( modified => 1 );
-}
-
-sub find_duplicated {
-    my ($app) = @_;
-
-
-
 }
 
 sub doLog {

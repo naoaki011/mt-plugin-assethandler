@@ -1,18 +1,18 @@
 <mt:setvar name="page_title" value="<__trans phrase="Manage Assets">">
 <mt:setvarblock name="html_head" append="1">
-  <style type="text/css">
-    .file_name { width: 300px; overflow: hidden; }
+<style type="text/css">
+    .file_preview { width: 300px; overflow: hidden; }
     .detail { width: 800px; }
     .vars { width: 500px; }
     .vars input[type="text"],
     .vars textarea { width: 95%; }
     .plugin-actions { display: none; }
     #asset-listing-table .status-missing {
-      background: url("<mt:var name="static_uri">images/status_icons/warning.gif") no-repeat scroll left center transparent;
-      margin-left: 5px;
-      padding-left: 10px;
+        background: url("<mt:var name="static_uri" escape="html">images/status_icons/warning.gif") no-repeat scroll left center transparent;
+        margin-left: 5px;
+        padding-left: 10px;
     }
-  </style>
+</style>
 </mt:setvarblock>
 <mt:include name="include/header.tmpl" id="header_include">
 <mt:setvarblock name="save_button_title"><__trans phrase="Save these [_1] (s)" params="<mt:var name="object_label_plural" lower_case="1">"></mt:setvarblock>
@@ -26,29 +26,36 @@
    class="save action primary button mt-submit-items">
   <__trans phrase="Save">
   </button>
+  <button
+   mt:command="cancel"
+   mt:mode="cancel_assets"
+   type="cancel"
+   title="<__trans phrase="Cancel">"
+   class="action button cancel">
+  <__trans phrase="Cancel">
+  </button>
 </mt:setvarblock>
 <mtapp:listing>
 <mt:if __first__>
   <thead>
     <tr>
-      <th class="col head file_name"><span class="col-label"><__trans phrase="File"></span></th>
+      <th class="col head file_preview"><span class="col-label"><__trans phrase="Preview"></span></th>
       <th class="col head detail" colspan="2"><span class="col-label"><__trans phrase="Details"></span></th>
     </tr>
   </thead>
   <tbody>
 </mt:if>
-    <tr id="asset-<mt:var name="id">" class="<mt:if name="__odd__">odd<mt:else>even</mt:if>">
-      <td class="col file_name">
-        <input type="hidden" name="id" value="<mt:var name="id">" id="id" />
-        <input type="hidden" id="asset-<mt:var name="id">-json" value="<mt:var name="metadata_json" escape="html">" />
-  <mt:unless name="file_is_missing">
-        <img src="<$mt:var name="thumbnail_url"$>" />
-  <mt:else>
+    <tr id="asset-<mt:var name="id" escape="html">" class="<mt:if name="__odd__">odd<mt:else>even</mt:if>">
+      <td class="col file_preview">
+        <input type="hidden" name="id" value="<mt:var name="id" escape="html">" id="id" />
+        <input type="hidden" id="asset-<mt:var name="id" escape="html">-json" value="<mt:var name="metadata_json" escape="html">" />
+<mt:unless name="file_is_missing">
+        <a href="<$mt:var name="url" escape="html"$>">
+          <img src="<$mt:var name="thumbnail_url" escape="html"$>" alt="<$mt:var name="file_label" escape="html" default="$file_name"$>" />
+        </a>
+<mt:else>
         <$mt:var name="file_label" escape="html" default="$file_name"$><span class="status-missing">(<__trans phrase="Asset Missing">)</span>
-  </mt:unless>
-        <div id="asset-<mt:var name="id">-preview" class="asset-preview">
-          <div id="asset-<mt:var name="id">-preview-inner" class="asset-preview-inner"></div>
-        </div>
+</mt:unless>
       </td>
       <td class="col vars">
         <div>
@@ -57,7 +64,7 @@
            label_class="top-label"
            label="<__trans phrase="Name">">
             <div class="textarea-wrapper">
-              <input type="text" name="label_<mt:var name="id">" value="<$mt:var name="file_label" escape="html" default="$file_name"$>" class="text full full-width" />
+              <input type="text" name="label_<mt:var name="id" escape="html">" id="label_<mt:var name="id" escape="html">" class="text full full-width" value="<$mt:var name="file_label" escape="html" default="$file_name"$>" />
             </div>
           </mtapp:setting>
           <mtapp:setting
@@ -65,28 +72,52 @@
            label_class="top-label"
            label="<__trans phrase="Tags">">
             <div class="textarea-wrapper">
-              <input type="text" name="tags_<mt:var name="id">" value="<mt:var name="tags" escape="html">" class="text full full-width" />
+              <input type="text" name="tags_<mt:var name="id" escape="html">" id="tags_<mt:var name="id" escape="html">" class="text full full-width" value="<$mt:var name="tags" escape="html"$>" />
             </div>
           </mtapp:setting>
-        </div>
-        <div>
           <mtapp:setting
            id="description"
            label_class="top-label"
            label="<__trans phrase="Description">">
-            <textarea name="description_<mt:var name="id">" id="description_<mt:var name="id">" class="full-width" rows="4"><mt:var name="description"></textarea>
+            <textarea name="description_<mt:var name="id" escape="html">" id="description_<mt:var name="id" escape="html">" class="full full-width" rows="4"><$mt:var name="description" escape="html"$></textarea>
           </mtapp:setting>
         </div>
       </td>
       <td class="col statics">
+        <div>
           <mtapp:setting
-           id="file_name"
+           id="created_on"
            label_class="top-label"
-           label="<__trans phrase="Name">">
+           label="<__trans phrase="Created On">">
             <div class="textarea-wrapper">
-              <input type="text" name="label_<mt:var name="id">" value="<$mt:var name="file_label" escape="html" default="$file_name"$>" class="text" />
+              <input type="text" name="created_on_<mt:var name="id" escape="html">" value="<mt:var name="created_on_time_formatted" escape="html">" class="text full full-width" readonly="readonly" />
             </div>
           </mtapp:setting>
+          <mtapp:setting
+           id="modified_on"
+           label_class="top-label"
+           label="<__trans phrase="Modified On">">
+            <div class="textarea-wrapper">
+              <input type="text" name="modified_on_<mt:var name="id" escape="html">" value="<mt:var name="modified_on_time_formatted" escape="html">" class="text full full-width" readonly="readonly" />
+            </div>
+          </mtapp:setting>
+          <mtapp:setting
+           id="created_by"
+           label_class="top-label"
+           label="<__trans phrase="Created By">">
+            <mt:var name="created_by">
+          </mtapp:setting>
+<mt:if name="class" eq="image">
+          <mtapp:setting
+           id="file_size"
+           label_class="top-label"
+           label="<__trans phrase="FileSize">">
+            <mt:var name="file_size_formatted" escape="html"> (<mt:var name="image_width" escape="html">px &times; <mt:var name="image_height" escape="html">px)
+          </mtapp:setting>
+</mt:if>
+        </div>
+        <div id="append_statics">
+        </div>
       </td>
     </tr>
 <mt:if __last__>

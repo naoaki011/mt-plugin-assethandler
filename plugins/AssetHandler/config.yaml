@@ -19,7 +19,8 @@ callbacks:
   MT::App::CMS::template_source.list_asset: $AssetHandler::AssetHandler::App::CMS::cb_list_asset_src
   MT::App::CMS::template_param.list_asset: $AssetHandler::AssetHandler::App::CMS::cb_list_asset_param
   MT::App::CMS::template_source.asset_table: $AssetHandler::AssetHandler::App::CMS::cb_asset_table
-  app_pre_listing_list_asset: $AssetHandler::AssetHandler::App::CMS::cb_list_asset
+  app_pre_listing_list_asset: $AssetHandler::AssetHandler::App::CMS::cb_list_asset_pre_listing
+  list_template_param.asset: $AssetHandler::AssetHandler::App::CMS::cb_list_param_asset
   template_param.header: $AssetHandler::AssetHandler::App::CMS::cb_header_param
 applications:
   cms:
@@ -109,6 +110,7 @@ applications:
     methods:
       asset_batch_editor: $AssetHandler::AssetHandler::App::CMS::open_batch_editor
       save_assets: $AssetHandler::AssetHandler::App::CMS::save_assets
+      cancel_assets: $AssetHandler::AssetHandler::App::CMS::cancel_assets
       asset_import: $AssetHandler::AssetHandler::App::CMS::start_transporter
       handle_transport_assets: $AssetHandler::AssetHandler::App::CMS::transport
     menus:

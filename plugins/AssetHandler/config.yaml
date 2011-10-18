@@ -44,7 +44,6 @@ applications:
           permission: edit_assets
           condition: $AssetHandler::AssetHandler::Util::is_mt5
           no_prompt: 1
-          button: 1
         unlink:
           label: Unlink
           code: $AssetHandler::AssetHandler::App::CMS::unlink_asset

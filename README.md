@@ -6,6 +6,6 @@ One other problem is with editing asset details - currently, the only way you ca
 
 Asset Handler which provides two crucial features that should make using assets in Movable Type a far more enjoyable experience:
 
-    Adds a Batch Edit option to the drop down menu on the asset listing screens which is almost identical to the batch-edit option on the entry listing. Simply select the assets you wish to edit, choose Batch Edit and easily edit the title, description and tags for the chosen assets.
+- Adds a Batch Edit option to the drop down menu on the asset listing screens which is almost identical to the batch-edit option on the entry listing. Simply select the assets you wish to edit, choose Batch Edit and easily edit the title, description and tags for the chosen assets.
 
-    An importer allows you to easily import existing files on your server into Movable Type as assets. A wizard guides you through the entire process and makes it a breeze to import a single file or an entire folder!
+- An importer allows you to easily import existing files on your server into Movable Type as assets. A wizard guides you through the entire process and makes it a breeze to import a single file or an entire folder!

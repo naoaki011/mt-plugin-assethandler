@@ -9,3 +9,9 @@ Asset Handler which provides two crucial features that should make using assets 
 - Adds a Batch Edit option to the drop down menu on the asset listing screens which is almost identical to the batch-edit option on the entry listing. Simply select the assets you wish to edit, choose Batch Edit and easily edit the title, description and tags for the chosen assets.
 
 - An importer allows you to easily import existing files on your server into Movable Type as assets. A wizard guides you through the entire process and makes it a breeze to import a single file or an entire folder!
+
+## This program is distributed under the terms of the GNU General Public License, version 2.
+
++ http://plugins.movalog.com/asset-handler/
++ https://github.com/arvind/movabletype-asshat
++ https://github.com/jayallen/mt-plugin-assethandler

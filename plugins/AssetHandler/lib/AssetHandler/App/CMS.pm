@@ -43,9 +43,9 @@ sub open_batch_editor {
         my $blog = $obj->blog;
         $row->{blog_name} = $blog ? $blog->name : '-';
         $row->{class} = $obj->class;
-        $row->{file_path} = $obj->file_path;
+        $row->{file_path} = $obj->file_path || '';
         $row->{url} = $obj->url;
-        $row->{file_name} = File::Basename::basename( $row->{file_path} );
+        $row->{file_name} = File::Basename::basename( $row->{file_path} ) if $row->{file_path};
         my $meta = $obj->metadata;
         $row->{file_label} = $obj->label;
         if ( -f $row->{file_path} ) {
@@ -71,7 +71,12 @@ sub open_batch_editor {
             $row->{image_height} = $meta->{image_height};
         }
         else {
-            $row->{file_is_missing} = 1;
+            if ( $obj->class =~ /image|audio|video|file|archive/) {
+                $row->{file_is_missing} = 1;
+            }
+            else {
+                $row->{asset_has_no_file} = 1;
+            }
         }
         if ( my $by = $obj->created_by ) {
             my $user = MT::Author->load($by);
@@ -892,12 +897,6 @@ sub move_assets {
         my $dest_file = File::Spec->catfile($dest_path, $asset->file_name);
         $fmgr->rename($asset->file_path, $dest_file)
             or die $fmgr->errstr;
-        $asset->file_path(
-            File::Spec->catfile('%r', @folders, $asset->file_name)
-        );
-        $asset->url(
-            join('/', '%r', @folders) . '/' . $asset->file_name
-        );
         $asset->save
           or die $asset->errstr;
         $moved_flag = 1;

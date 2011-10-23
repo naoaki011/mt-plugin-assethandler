@@ -1,9 +1,8 @@
 <mt:setvar name="page_title" value="<__trans phrase="Manage Assets">">
 <mt:setvarblock name="html_head" append="1">
 <style type="text/css">
-    .file_preview { width: 300px; overflow: hidden; }
+    .file_preview { width: 240px; overflow: hidden; }
     .detail { width: 800px; }
-    .vars { width: 500px; }
     .vars input[type="text"],
     .vars textarea { width: 95%; }
     .plugin-actions { display: none; }
@@ -85,6 +84,9 @@
       </td>
       <td class="col statics">
         <div>
+          <div class="field">
+            <__trans phrase="Type">:<mt:var name="asset_type" escape="html">
+          </div>
           <mtapp:setting
            id="created_on"
            label_class="top-label"

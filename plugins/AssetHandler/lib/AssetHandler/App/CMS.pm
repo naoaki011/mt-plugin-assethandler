@@ -101,6 +101,7 @@ sub open_batch_editor {
         $row->{metadata_json} = JSON::to_json($meta);
         my $tags = MT::Tag->join( $tag_delim, $obj->tags );
         $row->{tags} = $tags;
+        $row->{asset_type} = ($obj->class || '');
     };
     return $app->listing( {
             terms => { id => \@ids, blog_id => $blog_id },

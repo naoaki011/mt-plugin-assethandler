@@ -171,8 +171,6 @@ sub start_transporter {
     if (! $blog ) {
         return MT->translate( 'Invalid request.' );
     }
-#    $app->validate_magic()
-#      or return MT->translate( 'Permission denied.' );
     my $user = $app->user;
     if (! is_user_can( $blog, $user, 'upload' ) ) {
         return MT->translate( 'Permission denied.' );
@@ -181,6 +179,8 @@ sub start_transporter {
     ($param->{path} = $blog->site_path) =~ s{/*$}{/};
     $param->{path} =~ s{\\}{/}g;
     ($param->{url}  = $blog->site_url)  =~ s{/*$}{/};
+    $param->{with_entry} = ( $app->config->Asset2Entry || 0 );
+    $param->{with_entry} = 1 if ( $blog->theme_id eq 'photogallery_blog');
     return $app->build_page( $plugin->load_tmpl('transporter.tmpl'), $param );
 }
 
@@ -205,7 +205,6 @@ sub transport {
     my $path    = $q->param('path');
     $path       =~ s{\\}{/}g;
     my $url     = $q->param('url');
-#    doLog($q->param('make_entry') . $q->param('asset_category'));
     my $plugin  = MT->component('AssetHandler');
     my $param   = {
         blog_id   => $blog_id,
@@ -215,7 +214,6 @@ sub transport {
         button    => 'continue',
         readonly  => 1,
     };
-
     if (-e $path){
         if (-f $path){
             print_transport_progress($plugin, $app, 'start');
@@ -239,6 +237,9 @@ sub transport {
                 closedir(DIR);
                 @files = sort { $a->{file} cmp $b->{file} } @files; 
                 $param->{files} = \@files;      
+                $param->{make_entry} = ($q->param('make_entry') || 0);
+                $param->{category_label} = ($q->param('category_label') || '');
+                $param->{category_basename} = ($q->param('category_basename') || '');
             } else {
                 # We get here if the user has chosen some specific files to import
                 $path .= '/' unless $path =~ m!/$!; 
@@ -252,7 +253,10 @@ sub transport {
                         url => $url,
                         file_basename => $file,
                         full_path => $path.$file,
-                        full_url => $url.$file
+                        full_url => $url.$file,
+                        make_entry => ($q->param('make_entry') || 0),
+                        category_label => ($q->param('category_label') || ''),
+                        category_basename => ($q->param('category_basename') || '')
                     });
                     $app->print($plugin->translate("Transported '[_1]'\n",
                         $path.$file));
@@ -319,6 +323,7 @@ sub _process_transport {
         'file_path' => $local_file,
         'blog_id' => $blog->id,
     }) || $asset_pkg->new;
+    my $asset_is_new = 0;
     if ($asset->id) {
         $asset->modified_by( $app->user->id );
     }
@@ -334,6 +339,19 @@ sub _process_transport {
         $asset->file_ext($ext);
         $asset->blog_id($blog->id);
         $asset->created_by( $app->user->id );
+        $asset_is_new = 1;
+    }
+    eval { require Image::ExifTool; };
+    if (!$@) {
+        my $exif = new Image::ExifTool;
+        my $exif_data = $exif->ImageInfo( $asset->file_path );
+        my $date = $exif_data->{ 'DateTimeOriginal' } || '';
+        if ($date) {
+            $date =~ s/[: ]//g;
+            doLog('ExifDate' . $date);
+        }
+        my $rotation = $exif_data->{Orientation} || 0;
+        doLog('Rotation' . $rotation);
     }
     my $site_url = $blog->site_url;
     $url =~ s!\\!/!g;
@@ -347,6 +365,68 @@ sub _process_transport {
     $mimetype = LWP::MediaTypes::guess_media_type($asset->file_path);
     $asset->mime_type($mimetype) if $mimetype;
     $asset->save;
+    my $cb = $user->text_format || $blog->convert_paras;
+    $cb = '__default__' if $cb eq '1';
+    if ($asset_is_new && ($param->{make_entry} || 0)) {
+        my ($entry, $category);
+        my $asset_basename = (File::Basename::fileparse( $asset->file_name, qr/\.[A-Za-z0-9]+$/ ))[0];
+        my $entry_title = (dirify($asset->label) || dirify($asset_basename));
+        my $entry_basename = lc(dirify($asset_basename));
+        if ( is_user_can( $blog, $user, 'create_post' ) ) {
+            require MT::Entry;
+            $entry = MT::Entry->new;
+            $entry->title($entry_title);
+            $entry->basename($entry_basename);
+            $entry->status(MT::Entry::HOLD());
+            $entry->author_id($user->id);
+            $entry->text('');
+            $entry->convert_breaks($cb);
+            $entry->blog_id($blog->id);
+            $entry->class('entry');
+            $entry->save
+              or die $entry->errstr;
+            require MT::Category;
+            my $category_label = ($param->{category_label} || '');
+            my $category_basename = ($param->{category_basename} || lc($param->{category_label}) || '');
+            $category = MT::Category->load({
+                'label' => $category_label,
+                'blog_id' => $blog->id,
+            });
+            if (! $category) {
+                if ( is_user_can( $blog, $user, 'edit_categories' ) ) {
+                    $category = MT::Category->new;
+                    $category->label($category_label);
+                    $category->basename($category_basename);
+                    $category->blog_id($blog->id);
+                    $category->class('category');
+                    $category->save
+                      or die $category->errstr;
+                }
+                else {
+                    doLog( 'Create Category Permission denied.' );
+                }
+            }
+            require MT::Placement;
+            my $placement = MT::Placement->new;
+            $placement->blog_id($blog->id);
+            $placement->category_id($category->id);
+            $placement->entry_id($entry->id);
+            $placement->is_primary(1);
+            $placement->save
+              or die $placement->errstr;
+            require MT::ObjectAsset;
+            my $object = MT::ObjectAsset->new;
+            $object->blog_id($blog->id);
+            $object->asset_id($asset->id);
+            $object->object_id($entry->id);
+            $object->object_ds('entry');
+            $object->save
+              or die $object->errstr;
+        }
+        else {
+            doLog( 'Create Entry Permission denied.' );
+        }
+    }
 
     my $original = $asset->clone;
     $app->run_callbacks( 'cms_post_save.asset', $app, $asset, $original );

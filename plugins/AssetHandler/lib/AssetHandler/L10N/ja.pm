@@ -45,7 +45,9 @@ use vars qw( %Lexicon );
 	'Rename Assets' => 'アイテムのファイル名を変更する',
 	'Specify a filename to rename the selected asset(s) to. Examples: examples.jpg or examples.'
 		=> '選択したアイテムの変更する名前を入力してください。 例: examples.jpg または example',
-	'Find Dupelicated' => '重複アイテムを探す',
+	'Make Entry (with Category)' => 'ブログ記事を作成する（カテゴリーと共に）',
+	'Category Label:' => 'カテゴリー名:',
+	'Category Basename:' => 'カテゴリーベースネーム:',
 );
 
 1;

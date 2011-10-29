@@ -371,6 +371,7 @@ list_properties:
           $site_path =~ s{\\}{/}g;
           $site_path =~ s{/$}{};
           $path    =~ s!$site_path!!;
+          $path    =~ s!^/$!-!;
           my $out = qq {
             <span>$path</span>
           };

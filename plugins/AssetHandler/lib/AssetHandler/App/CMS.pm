@@ -771,14 +771,14 @@ sub cb_header_param {
     <mtapp:statusmsg
      id="assets_moved"
      class="success">
-      The selected asset(s) has been successfully moved. Be sure to republish and double-check for any existing use of the old URL!
+      <__trans_section component="AssetHandler"><__trans phrase="The selected asset(s) has been successfully moved. Be sure to republish and double-check for any existing use of the old URL!"></__trans_section>
     </mtapp:statusmsg>
 </mt:if>
 <mt:if name="assets_not_moved">
     <mtapp:statusmsg
      id="assets_not_moved"
      class="success">
-      Some selected asset(s) has <em>not</em> been moved. The selected asset(s) are not file-based or are missing.
+      <__trans_section component="AssetHandler"><__trans phrase="Some selected asset(s) has <em>not</em> been moved. The selected asset(s) are not file-based or are missing."></__trans_section>
     </mtapp:statusmsg>
 </mt:if>
 </mt:setvarblock>
@@ -980,6 +980,12 @@ sub move_assets {
         my $dest_file = File::Spec->catfile($dest_path, $asset->file_name);
         $fmgr->rename($asset->file_path, $dest_file)
             or die $fmgr->errstr;
+        $asset->file_path(
+            File::Spec->catfile('%r', @folders, $asset->file_name)
+        );
+        $asset->url(
+            join('/', '%r', @folders) . '/' . $asset->file_name
+        ); 
         $asset->save
           or die $asset->errstr;
         $moved_flag = 1;

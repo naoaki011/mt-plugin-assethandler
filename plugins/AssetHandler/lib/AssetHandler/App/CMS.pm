@@ -1025,7 +1025,31 @@ sub rename_assets {
               or die $fmgr->errstr;
             $dest_path =~ s{\\}{/}g;
             (my $site_path = $blog->site_path) =~ s{\\}{/}g;
+            my $site_url = $blog->site_url;
             $dest_path =~ s!$site_path!%r!;
+            my @object_assets = MT->model('objectasset')->load({
+                'asset_id' => $asset->id,
+                'blog_id' => $blog->id,
+            });
+            foreach my $object_asset (@object_assets) {
+                if ($object_asset->object_id) {
+                    my $entry = MT->model('entry')->load($object_asset->object_id);
+                    my $text = $entry->text || '';
+                    my $more = $entry->text_more || '';
+                    my $fullpath = $asset->url;
+                    (my $fulldest = $dest_path) =~ s!%r!$site_url!;
+                    $text =~ s!$fullpath!$fulldest!g;
+                    $more =~ s!$fullpath!$fulldest!g;
+                    (my $relpath = $fullpath) =~ s!https?://[^/]+/!/!;
+                    (my $reldest = $fulldest) =~ s!https?://[^/]+/!/!;
+                    $text =~ s!$relpath!$reldest!g;
+                    $more =~ s!$relpath!$reldest!g;
+                    $entry->text($text);
+                    $entry->text_more($more);
+                    $entry->save
+                      or die $entry->errstr;
+                }
+            }
             $asset->file_path( $dest_path );
             $asset->url( $dest_path );
             $asset->file_name( $filename );

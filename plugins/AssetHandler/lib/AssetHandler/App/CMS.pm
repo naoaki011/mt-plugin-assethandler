@@ -1008,6 +1008,7 @@ sub rename_assets {
     foreach my $asset_id (@asset_ids) {
         my $asset = MT->model('asset')->load($asset_id)
             or next;
+        next unless ( $asset->file_path );
         my $blog = MT->model('blog')->load($asset->blog_id);
         (my $basename = $filename) =~ s{\..+?$}{};
         if ( $basename eq $filename ) {
@@ -1083,6 +1084,7 @@ sub fix_datas {
     foreach (@aids) {
         my $asset = MT::Asset->load ({ id => $_ })
             or next;
+        next unless ( $asset->file_path );
         (my $file_path = $asset->url) =~ s!$site_url!%r/!;
         $file_path =~ s!\\!/!;
         $file_path =~ s!//!/!;

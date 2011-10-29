@@ -804,13 +804,6 @@ sub unlink_asset {
     foreach my $id (@ids) {
         my $asset = MT::Asset->load($id);
         next unless ($asset->file_name);
-        $asset->remove_cached_files;
-        # remove children.
-#        my $class = ref $asset;
-#        my $iter = __PACKAGE__->load_iter({ parent => $asset->id, class => '*' });
-#        while(my $a = $iter->()) {
-#            $a->SUPER::remove;
-#        }
         # Remove MT::ObjectAsset records
         my $class = MT->model('objectasset');
         my $iter = $class->load_iter({ asset_id => $asset->id });
@@ -960,6 +953,9 @@ sub move_assets {
     if (! is_user_can( $blog, $user, 'edit_assets' ) ) {
         return MT->translate( 'Permission denied.' );
     }
+    (my $site_path = $blog->site_path) =~ s{\\}{/}g;
+    $site_path .= '/' if ($site_path =~ m!([^/])$!);
+    my $site_url = $blog->site_url;
     my $q = $app->{query};
     my $folder = $q->param('itemset_action_input') || '';
     my @folders = split('/', $folder);
@@ -977,9 +973,32 @@ sub move_assets {
             $fmgr->mkpath($dest_path)
                 or die $fmgr->errstr;
         }
-        my $dest_file = File::Spec->catfile($dest_path, $asset->file_name);
+        (my $dest_file = File::Spec->catfile($dest_path, $asset->file_name)) =~ s{\\}{/}g;
         $fmgr->rename($asset->file_path, $dest_file)
             or die $fmgr->errstr;
+        my @object_assets = MT->model('objectasset')->load({
+            'asset_id' => $asset->id,
+            'blog_id' => $blog->id,
+        });
+        foreach my $object_asset (@object_assets) {
+            if ($object_asset->object_id) {
+                my $entry = MT->model('entry')->load($object_asset->object_id);
+                my $text = $entry->text || '';
+                my $more = $entry->text_more || '';
+                my $fullpath = $asset->url;
+                (my $fulldest = $dest_file) =~ s!$site_path!$site_url!;
+                $text =~ s!$fullpath!$fulldest!g;
+                $more =~ s!$fullpath!$fulldest!g;
+                (my $relpath = $fullpath) =~ s!https?://[^/]+/!/!;
+                (my $reldest = $fulldest) =~ s!https?://[^/]+/!/!;
+                $text =~ s!$relpath!$reldest!g;
+                $more =~ s!$relpath!$reldest!g;
+                $entry->text($text);
+                $entry->text_more($more);
+                $entry->save
+                  or die $entry->errstr;
+            }
+        }
         $asset->file_path(
             File::Spec->catfile('%r', @folders, $asset->file_name)
         );
@@ -1008,6 +1027,9 @@ sub rename_assets {
     if (! is_user_can( $blog, $user, 'edit_assets' ) ) {
         return MT->translate( 'Permission denied.' );
     }
+    (my $site_path = $blog->site_path) =~ s{\\}{/}g;
+    $site_path .= '/' if ($site_path =~ m!([^/])$!);
+    my $site_url = $blog->site_url;
     my $q = $app->{query};
     my $filename = $q->param('itemset_action_input') || '';
     my $rename_flag;
@@ -1023,7 +1045,7 @@ sub rename_assets {
         }
         (my $folder = $asset->file_path) =~ s{\\}{/}g;
         $folder =~ s{/[^/]+$}{/};
-        my $dest_path = File::Spec->catdir($folder, $filename);
+        (my $dest_path = File::Spec->catdir($folder, $filename)) =~ s{\\}{/}g;
         my $fmgr = $blog->file_mgr;
         if ( $fmgr->exists($dest_path) ) {
             $rename_flag = 1;
@@ -1031,10 +1053,7 @@ sub rename_assets {
         else {
             $fmgr->rename($asset->file_path, $dest_path)
               or die $fmgr->errstr;
-            $dest_path =~ s{\\}{/}g;
-            (my $site_path = $blog->site_path) =~ s{\\}{/}g;
-            my $site_url = $blog->site_url;
-            $dest_path =~ s!$site_path!%r!;
+            $dest_path =~ s!$site_path!%r/!;
             my @object_assets = MT->model('objectasset')->load({
                 'asset_id' => $asset->id,
                 'blog_id' => $blog->id,
@@ -1045,7 +1064,7 @@ sub rename_assets {
                     my $text = $entry->text || '';
                     my $more = $entry->text_more || '';
                     my $fullpath = $asset->url;
-                    (my $fulldest = $dest_path) =~ s!%r!$site_url!;
+                    (my $fulldest = $dest_path) =~ s!%r/!$site_url!;
                     $text =~ s!$fullpath!$fulldest!g;
                     $more =~ s!$fullpath!$fulldest!g;
                     (my $relpath = $fullpath) =~ s!https?://[^/]+/!/!;

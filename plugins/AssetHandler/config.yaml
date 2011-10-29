@@ -28,12 +28,12 @@ applications:
       list_asset:
         transport_assets:
           label: Import Assets
-          dialog: asset_import
+          mode: asset_import
           condition: $AssetHandler::AssetHandler::Util::is_blog_context
       list_assets:
         transport_assets:
           label: Import Assets
-          dialog: asset_import
+          mode: asset_import
           condition: $AssetHandler::AssetHandler::Util::is_blog_context
     list_actions:
       asset:

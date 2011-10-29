@@ -600,6 +600,7 @@ sub cb_list_asset_pre_listing {
             $tmp =~ s!\\!/!g;
             $site_path =~ s!\\!/!g;
             $tmp =~ s!^$site_path(.*)$!$1!;
+            $tmp .= '/' if ($tmp);
             $row->{folder} = $tmp;
 
             my $size = $fmgr->file_size( $file_path );

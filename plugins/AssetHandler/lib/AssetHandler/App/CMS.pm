@@ -71,7 +71,7 @@ sub open_batch_editor {
             $row->{image_height} = $meta->{image_height};
         }
         else {
-            if ( $obj->class =~ /image|audio|video|file|archive/) {
+            if ( $obj->file_name ) {
                 $row->{file_is_missing} = 1;
             }
             else {
@@ -802,7 +802,8 @@ sub unlink_asset {
     require MT::Asset;
     foreach my $id (@ids) {
         my $asset = MT::Asset->load($id);
-#        $asset->remove_cached_files;
+        next unless ($asset->file_name);
+        $asset->remove_cached_files;
         # remove children.
 #        my $class = ref $asset;
 #        my $iter = __PACKAGE__->load_iter({ parent => $asset->id, class => '*' });
@@ -838,7 +839,7 @@ sub path_tor {
     require MT::Asset;
     foreach my $id (@ids) {
         my $asset = MT::Asset->load($id);
-        if ( $asset->class =~ /image|audio|video|file|archive/) {
+        if ( $asset->file_path ) {
             (my $file_path = $asset->file_path) =~ s!\\!/!g;
             $file_path =~ s!$site_path!%r!;
             $asset->file_path( $file_path );
@@ -870,7 +871,7 @@ sub flatten_path {
     require MT::Asset;
     foreach my $id (@ids) {
         my $asset = MT::Asset->load($id);
-        if ( $asset->class =~ /image|audio|video|file|archive/) {
+        if ( $asset->file_path ) {
             (my $file_path = $asset->file_path) =~ s!\\!/!g;
             $file_path =~ s!%r!$site_path!;
             $asset->file_path( $file_path );
@@ -901,7 +902,7 @@ sub fix_url {
     require MT::Asset;
     foreach my $id (@ids) {
         my $asset = MT::Asset->load($id);
-        if ( $asset->class =~ /image|audio|video|file|archive/) {
+        if ( $asset->file_path ) {
             (my $file_path = $asset->file_path) =~ s!\\!/!g;
             $file_path =~ s!$site_path!!;
             my $url = '%r' . $file_path;
@@ -934,7 +935,7 @@ sub modify_path {
     foreach (@aids) {
         my $asset = MT::Asset->load ({ id => $_ })
             or next;
-        if ( $asset->class =~ /image|audio|video|file|archive/) {
+        if ( $asset->file_path ) {
             (my $local_path = File::Spec->catfile('%r', $folder, $asset->file_name)) =~ s!\\!/!g;
             $asset->file_path($local_path);
             $asset->url($local_path);

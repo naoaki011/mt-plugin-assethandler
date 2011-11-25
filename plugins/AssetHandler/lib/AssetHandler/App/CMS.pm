@@ -344,14 +344,20 @@ sub _process_transport {
     eval { require Image::ExifTool; };
     if (!$@) {
         my $exif = new Image::ExifTool;
-        my $exif_data = $exif->ImageInfo( $asset->file_path );
-        my $date = $exif_data->{ 'DateTimeOriginal' } || '';
-        if ($date) {
-            $date =~ s/[: ]//g;
-            doLog('ExifDate' . $date);
+        if (my $exif_data = $exif->ImageInfo( $asset->file_path )) {
+            my $date = $exif_data->{ 'DateTimeOriginal' } || '';
+            if ($date) {
+                my ($year, $mon, $day, $hour, $min, $sec)
+                  = ($date =~ /(\d{4}):(\d\d):(\d\d) (\d\d):(\d\d):(\d\d)/);
+                my $ts = sprintf("%04d-%02d-%02d %02d:%02d:%02d", $year, $mon-1, $day, $hour, $min, $sec);
+                $asset->created_on( $ts ) if $asset_is_new;
+                $asset->modified_on( $ts ) if $asset_is_new;
+            }
+            # my $rotation = $exif_data->{Orientation} || 0;
+            # my $gps = $exif_data->{GPSPosition} || '';
+            # my $gpslon = $exif_data->{GPSLongitude} || '';
+            # my $gpslat = $exif_data->{GPSLatitude} || '';
         }
-        my $rotation = $exif_data->{Orientation} || 0;
-        doLog('Rotation' . $rotation);
     }
     my $site_url = $blog->site_url;
     $url =~ s!\\!/!g;

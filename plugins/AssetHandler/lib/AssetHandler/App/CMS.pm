@@ -110,7 +110,7 @@ sub open_batch_editor {
             template => 'asset_batch_editor.tmpl',
             params => {
                 blog_id      => $blog_id,
-                        edit_blog_id => $blog_id,
+                edit_blog_id => $blog_id,
                 saved => $app->param('saved') || 0,
                 return_args => "__mode=list&_type=asset&blog_id=$blog_id"
             },
@@ -964,18 +964,18 @@ sub move_assets {
     my @asset_ids = $q->param('id');
     foreach my $asset_id (@asset_ids) {
         my $asset = MT->model('asset')->load($asset_id)
-            or next;
+          or next;
         next unless $asset->file_path && -e $asset->file_path;
         my $blog = MT->model('blog')->load($asset->blog_id);
         my $fmgr = $blog->file_mgr;
         my $dest_path = File::Spec->catdir($blog->site_path, @folders);
         if ( !$fmgr->exists($dest_path) ) {
             $fmgr->mkpath($dest_path)
-                or die $fmgr->errstr;
+              or die $fmgr->errstr;
         }
         (my $dest_file = File::Spec->catfile($dest_path, $asset->file_name)) =~ s{\\}{/}g;
         $fmgr->rename($asset->file_path, $dest_file)
-            or die $fmgr->errstr;
+          or die $fmgr->errstr;
         my @object_assets = MT->model('objectasset')->load({
             'asset_id' => $asset->id,
             'blog_id' => $blog->id,

@@ -126,12 +126,12 @@ applications:
           - blog
 system_filters:
   asset:
-  no_assoc:
-    filter_editable: 0
-    label: Asset associated with no objects
-    items:
-    - type: not_associated_objects
-    order: 1000
+    no_assoc:
+      filter_editable: 0
+      label: Asset associated with no objects
+      items:
+        - type: not_associated_objects
+      order: 1000
 list_actions:
   asset:
     unlink:

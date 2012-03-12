@@ -15,13 +15,13 @@ sub is_blog_context {
     }
 }
 sub is_mt5 {
-    my $version = MT->version_id;
+    my $version = MT->version_number;
     if (($version < 5.1)&&($version >= 5)) {
         return 1;
     }
 }
 sub is_illiad {
-    my $version = MT->version_id;
+    my $version = MT->version_number;
     if ($version >= 5.1) {
         return 1;
     }

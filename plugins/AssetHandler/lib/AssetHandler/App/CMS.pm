@@ -558,7 +558,11 @@ HERE
         <p><a href="<mt:var name="script_url">?__mode=list_page&amp;blog_id=<mt:var name="blog_id" escape="url">&amp;filter=asset_id&amp;filter_val=<mt:var name="id" escape="url">"><__trans phrase="Show all pages"></a></p>
         </mt:if>
     <mt:else>
+        <mt:if name="is_thumbnail">
+        <span class="is_tumbnail">-</span>
+        <mt:else>
         <span class="hint"><__trans phrase="This asset has not been used."></span>
+        </mt:if>
     </mt:if>
                 </td>
                 <td><mt:var name="folder" /></td>
@@ -655,12 +659,13 @@ sub cb_list_asset_pre_listing {
         }
 
 ### New >
+        $row->{is_thumbnail} = $obj->parent ? 1 : 0;
         my @appears_in;
         my $place_class = $app->model('objectasset');
         my $place_iter = $place_class->load_iter(
             {
                 blog_id => $obj->blog_id || 0,
-                asset_id => $obj->parent ? $obj->parent : $obj->id
+                asset_id => $obj->id
             }
         );
         while (my $place = $place_iter->()) {

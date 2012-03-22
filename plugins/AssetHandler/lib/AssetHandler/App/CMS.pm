@@ -98,7 +98,12 @@ sub open_batch_editor {
               format_ts( MT::App::CMS::LISTING_TIMESTAMP_FORMAT, $modified_on, $blog, $app->user ? $app->user->preferred_language : undef );
             $row->{modified_on_relative} = relative_date( $modified_on, time, $blog );
         }
-        $row->{metadata_json} = JSON::to_json($meta);
+        if (MT->version_number >= 4.25) {
+            $row->{metadata_json} = JSON::to_json($meta);
+        }
+        else {
+            $row->{metadata_json} = JSON::objToJson($meta);
+        }
         my $tags = MT::Tag->join( $tag_delim, $obj->tags );
         $row->{tags} = $tags;
         $row->{asset_type} = ($obj->class || '');

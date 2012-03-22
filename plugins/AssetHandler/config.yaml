@@ -70,7 +70,7 @@ list_actions:
       no_prompt: 1
       button: 1
       permission: edit_assets
-      condition: $AssetHandler::AssetHandler::Util::is_new_editor
+      condition: $AssetHandler::AssetHandler::Util::is_blog_context
     unlink:
       label: Unlink
       code: $AssetHandler::AssetHandler::App::CMS::unlink_asset

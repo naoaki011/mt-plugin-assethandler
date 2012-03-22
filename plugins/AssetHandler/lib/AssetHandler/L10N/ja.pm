@@ -48,6 +48,8 @@ use vars qw( %Lexicon );
 	'Make Entry (with Category)' => 'ブログ記事を作成する（カテゴリーと共に）',
 	'Category Label:' => 'カテゴリー名:',
 	'Category Basename:' => 'カテゴリーベースネーム:',
+	'Modified On' => '修正日',
+	'FileSize' => 'ファイルサイズ',
 );
 
 1;

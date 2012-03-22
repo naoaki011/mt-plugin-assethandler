@@ -180,7 +180,9 @@ sub start_transporter {
     $param->{path} =~ s{\\}{/}g;
     ($param->{url}  = $blog->site_url)  =~ s{/*$}{/};
     $param->{with_entry} = ( $app->config->Asset2Entry || 0 );
-    $param->{with_entry} = 1 if ( $blog->theme_id eq 'photogallery_blog');
+    if (MT->version_number >= 5) {
+        $param->{with_entry} = 1 if ( $blog->theme_id eq 'photogallery_blog');
+    }
     return $app->build_page( $plugin->load_tmpl('transporter.tmpl'), $param );
 }
 
@@ -516,15 +518,19 @@ sub print_transport_progress {
 
 sub cb_asset_table {
     my ($cb, $app, $tmpl) = @_;
-
-    my $old = <<HERE;
+    if (MT->version_number < 5) {
+    
+    }
+    else {
+        return if (MT->version_number >= 5.1);
+        my $old = <<HERE;
                 <th class="created-on"><__trans phrase="Created On"></th>
             </tr>
         </mt:setvarblock>
 HERE
-    $old = quotemeta($old);
+        $old = quotemeta($old);
 
-    my $new = <<HERE;
+        my $new = <<HERE;
                 <th class="created-on"><__trans phrase="Created On"></th>
                 <th class="created-on"><__trans phrase="Appears in..."></th>
                 <th class="created-on"><__trans phrase="Folder"></th>
@@ -532,16 +538,16 @@ HERE
         </mt:setvarblock>
 HERE
 
-    $$tmpl =~ s/$old/$new/;
+        $$tmpl =~ s/$old/$new/;
 
-    $old = <<HERE;
+        $old = <<HERE;
             </tr>
     <mt:if __last__>
         </tbody>
 HERE
-    $old = quotemeta($old);
+        $old = quotemeta($old);
 
-    $new = <<HERE;
+        $new = <<HERE;
                 <td>
     <mt:if name="appears_in">
         <mt:loop name="appears_in">
@@ -571,152 +577,156 @@ HERE
         </tbody>
 HERE
 
-    $$tmpl =~ s/$old/$new/;
+        $$tmpl =~ s/$old/$new/;
+    }
 }
 
 sub cb_list_asset_pre_listing {
     my ($cb, $app, $terms, $args, $param, $hasher) = @_;
 
-    my $default_thumb_width = 75;
-    my $default_thumb_height = 75;
-    my $default_preview_width = 75;
-    my $default_preview_height = 75;
+    if (MT->version_number < 5) {
+    
+    }
+    else {
+        return if (MT->version_number >= 5.1);
+        my $default_thumb_width = 75;
+        my $default_thumb_height = 75;
+        my $default_preview_width = 75;
+        my $default_preview_height = 75;
 
-    my $site_path = $app->blog->site_path;
+        my $site_path = $app->blog->site_path;
 
-    require File::Basename;
-    require JSON;
-    my %blogs;
-    $$hasher = sub {
-        my ( $obj, $row, %param ) = @_;
-        my ($thumb_width, $thumb_height) = @param{qw( ThumbWidth ThumbHeight )};
-        $row->{id} = $obj->id;
-        my $blog = $blogs{ $obj->blog_id } ||= $obj->blog;
-        $row->{blog_name} = $blog ? $blog->name : '-';
-        $row->{url} = $obj->url; # this has to be called to calculate
-        $row->{asset_type} = $obj->class_type;
-        $row->{asset_class_label} = $obj->class_label;
-        my $file_path = $obj->file_path; # has to be called to calculate
-        my $meta = $obj->metadata;
-        require MT::FileMgr;
-        my $fmgr = MT::FileMgr->new('Local');
-        ## TBD: Make sure $file_path is file, not directory.
-        if ( $file_path && $fmgr->exists( $file_path ) ) {
-            $row->{file_path} = $file_path;
-            $row->{file_name} = File::Basename::basename( $file_path );
+        require File::Basename;
+        require JSON;
+        my %blogs;
+        $$hasher = sub {
+            my ( $obj, $row, %param ) = @_;
+            my ($thumb_width, $thumb_height) = @param{qw( ThumbWidth ThumbHeight )};
+            $row->{id} = $obj->id;
+            my $blog = $blogs{ $obj->blog_id } ||= $obj->blog;
+            $row->{blog_name} = $blog ? $blog->name : '-';
+            $row->{url} = $obj->url; # this has to be called to calculate
+            $row->{asset_type} = $obj->class_type;
+            $row->{asset_class_label} = $obj->class_label;
+            my $file_path = $obj->file_path; # has to be called to calculate
+            my $meta = $obj->metadata;
+            require MT::FileMgr;
+            my $fmgr = MT::FileMgr->new('Local');
+            ## TBD: Make sure $file_path is file, not directory.
+            if ( $file_path && $fmgr->exists( $file_path ) ) {
+                $row->{file_path} = $file_path;
+                $row->{file_name} = File::Basename::basename( $file_path );
 
-            my $filename = File::Basename::basename( $file_path );
-            (my $tmp = $file_path) =~ s!^(.*)[/\\]$filename$!$1!;
-            $tmp =~ s!\\!/!g;
-            $site_path =~ s!\\!/!g;
-            $tmp =~ s!^$site_path(.*)$!$1!;
-            $tmp .= '/' if ($tmp);
-            $row->{folder} = $tmp;
+                my $filename = File::Basename::basename( $file_path );
+                (my $tmp = $file_path) =~ s!^(.*)[/\\]$filename$!$1!;
+                $tmp =~ s!\\!/!g;
+                $site_path =~ s!\\!/!g;
+                $tmp =~ s!^$site_path(.*)$!$1!;
+                $tmp .= '/' if ($tmp);
+                $row->{folder} = $tmp;
 
-            my $size = $fmgr->file_size( $file_path );
-            $row->{file_size} = $size;
-            if ( $size < 1024 ) {
-                $row->{file_size_formatted} = sprintf( "%d Bytes", $size );
-            }
-            elsif ( $size < 1024000 ) {
-                $row->{file_size_formatted} =
-                  sprintf( "%.1f KB", $size / 1024 );
+                my $size = $fmgr->file_size( $file_path );
+                $row->{file_size} = $size;
+                if ( $size < 1024 ) {
+                    $row->{file_size_formatted} = sprintf( "%d Bytes", $size );
+                }
+                elsif ( $size < 1024000 ) {
+                    $row->{file_size_formatted} =
+                      sprintf( "%.1f KB", $size / 1024 );
+                }
+                else {
+                    $row->{file_size_formatted} =
+                      sprintf( "%.1f MB", $size / 1024000 );
+                }
+                $meta->{'file_size'} = $row->{file_size_formatted};
             }
             else {
-                $row->{file_size_formatted} =
-                  sprintf( "%.1f MB", $size / 1024000 );
+                $row->{file_is_missing} = 1 if $file_path;
             }
-            $meta->{'file_size'} = $row->{file_size_formatted};
-        }
-        else {
-            $row->{file_is_missing} = 1 if $file_path;
-        }
-        $row->{file_label} = $row->{label} = $obj->label || $row->{file_name} || $app->translate('Untitled');
+            $row->{file_label} = $row->{label} = $obj->label || $row->{file_name} || $app->translate('Untitled');
 
-        if ($obj->has_thumbnail) { 
-            $row->{has_thumbnail} = 1;
-            my $height = $thumb_height || $default_thumb_height || 75;
-            my $width  = $thumb_width  || $default_thumb_width  || 75;
-            my $square = $height == 75 && $width == 75;
-            @$meta{qw( thumbnail_url thumbnail_width thumbnail_height )}
-              = $obj->thumbnail_url( Height => $height, Width => $width , Square => $square );
+            if ($obj->has_thumbnail) { 
+                $row->{has_thumbnail} = 1;
+                my $height = $thumb_height || $default_thumb_height || 75;
+                my $width  = $thumb_width  || $default_thumb_width  || 75;
+                my $square = $height == 75 && $width == 75;
+                @$meta{qw( thumbnail_url thumbnail_width thumbnail_height )}
+                  = $obj->thumbnail_url( Height => $height, Width => $width , Square => $square );
 
-            $meta->{thumbnail_width_offset}  = int(($width  - $meta->{thumbnail_width})  / 2);
-            $meta->{thumbnail_height_offset} = int(($height - $meta->{thumbnail_height}) / 2);
+                $meta->{thumbnail_width_offset}  = int(($width  - $meta->{thumbnail_width})  / 2);
+                $meta->{thumbnail_height_offset} = int(($height - $meta->{thumbnail_height}) / 2);
 
-            if ($default_preview_width && $default_preview_height) {
-                @$meta{qw( preview_url preview_width preview_height )}
-                  = $obj->thumbnail_url(
-                    Height => $default_preview_height,
-                    Width  => $default_preview_width,
-                );
-                $meta->{preview_width_offset}  = int(($default_preview_width  - $meta->{preview_width})  / 2);
-                $meta->{preview_height_offset} = int(($default_preview_height - $meta->{preview_height}) / 2);
+                if ($default_preview_width && $default_preview_height) {
+                    @$meta{qw( preview_url preview_width preview_height )}
+                      = $obj->thumbnail_url(
+                        Height => $default_preview_height,
+                        Width  => $default_preview_width,
+                    );
+                    $meta->{preview_width_offset}  = int(($default_preview_width  - $meta->{preview_width})  / 2);
+                    $meta->{preview_height_offset} = int(($default_preview_height - $meta->{preview_height}) / 2);
+                }
             }
-        }
-        else {
-            $row->{has_thumbnail} = 0;
-        }
-
+            else {
+                $row->{has_thumbnail} = 0;
+            }
 ### New >
-        $row->{is_thumbnail} = $obj->parent ? 1 : 0;
-        my @appears_in;
-        my $place_class = $app->model('objectasset');
-        my $place_iter = $place_class->load_iter(
-            {
-                blog_id => $obj->blog_id || 0,
-                asset_id => $obj->id
-            }
-        );
-        while (my $place = $place_iter->()) {
-            my $entry_class = $app->model($place->object_ds) or next;
-            next unless $entry_class->isa('MT::Entry');
-            my $entry = $entry_class->load($place->object_id)
-                or next;
-            my %entry_data = (
-                id    => $place->object_id,
-                class => $entry->class_type,
-                entry => $entry,
-                title => $entry->title,
+            $row->{is_thumbnail} = $obj->parent ? 1 : 0;
+            my @appears_in;
+            my $place_class = $app->model('objectasset');
+            my $place_iter = $place_class->load_iter(
+                {
+                    blog_id => $obj->blog_id || 0,
+                    asset_id => $obj->id
+                }
             );
-            if (my $ts = $entry->authored_on) {
-                $entry_data{authored_on_ts} = $ts;
-                $entry_data{authored_on_formatted} =
-                  format_ts( MT::App::CMS::LISTING_DATETIME_FORMAT(), $ts, undef,
-                    $app->user ? $app->user->preferred_language : undef );
+            while (my $place = $place_iter->()) {
+                my $entry_class = $app->model($place->object_ds) or next;
+                next unless $entry_class->isa('MT::Entry');
+                my $entry = $entry_class->load($place->object_id)
+                    or next;
+                my %entry_data = (
+                    id    => $place->object_id,
+                    class => $entry->class_type,
+                    entry => $entry,
+                    title => $entry->title,
+                );
+                if (my $ts = $entry->authored_on) {
+                    $entry_data{authored_on_ts} = $ts;
+                    $entry_data{authored_on_formatted} =
+                      format_ts( MT::App::CMS::LISTING_DATETIME_FORMAT(), $ts, undef,
+                        $app->user ? $app->user->preferred_language : undef );
+                }
+                if (my $ts = $entry->created_on) {
+                    $entry_data{created_on_ts} = $ts;
+                    $entry_data{created_on_formatted} =
+                      format_ts( MT::App::CMS::LISTING_DATETIME_FORMAT(), $ts, undef,
+                        $app->user ? $app->user->preferred_language : undef );
+                }
+                push @appears_in, \%entry_data;
             }
-            if (my $ts = $entry->created_on) {
-                $entry_data{created_on_ts} = $ts;
-                $entry_data{created_on_formatted} =
-                  format_ts( MT::App::CMS::LISTING_DATETIME_FORMAT(), $ts, undef,
-                    $app->user ? $app->user->preferred_language : undef );
+            if (4 == @appears_in) {    
+                pop @appears_in;
+                $row->{appears_in_more} = 1;
             }
-            push @appears_in, \%entry_data;
-        }
-        if (4 == @appears_in) {    
-            pop @appears_in;
-            $row->{appears_in_more} = 1;
-        }
-        $row->{appears_in} = \@appears_in if @appears_in;
+            $row->{appears_in} = \@appears_in if @appears_in;
 ### New <
-
-        my $ts = $obj->created_on;
-        if ( my $by = $obj->created_by ) {
-            my $user = MT::Author->load($by);
-            $row->{created_by} = $user ? $user->name : $app->translate('(user deleted)');
-        }
-        if ($ts) {
-            $row->{created_on_formatted} =
-              format_ts( MT::App::CMS::LISTING_DATE_FORMAT(), $ts, $blog, $app->user ? $app->user->preferred_language : undef );
-            $row->{created_on_time_formatted} =
-              format_ts( MT::App::CMS::LISTING_TIMESTAMP_FORMAT(), $ts, $blog, $app->user ? $app->user->preferred_language : undef );
-            $row->{created_on_relative} = relative_date( $ts, time, $blog );
-        }
-
-        @$row{keys %$meta} = values %$meta;
-        $row->{metadata_json} = MT::Util::to_json($meta);
-        $row;
-    };
+            my $ts = $obj->created_on;
+            if ( my $by = $obj->created_by ) {
+                my $user = MT::Author->load($by);
+                $row->{created_by} = $user ? $user->name : $app->translate('(user deleted)');
+            }
+            if ($ts) {
+                $row->{created_on_formatted} =
+                  format_ts( MT::App::CMS::LISTING_DATE_FORMAT(), $ts, $blog, $app->user ? $app->user->preferred_language : undef );
+                $row->{created_on_time_formatted} =
+                  format_ts( MT::App::CMS::LISTING_TIMESTAMP_FORMAT(), $ts, $blog, $app->user ? $app->user->preferred_language : undef );
+                $row->{created_on_relative} = relative_date( $ts, time, $blog );
+            }
+            @$row{keys %$meta} = values %$meta;
+            $row->{metadata_json} = MT::Util::to_json($meta);
+            $row;
+        };
+    }
 }
 
 sub cb_list_param_asset {
@@ -733,6 +743,8 @@ sub cb_list_param_asset {
 
 sub cb_header_param {
     my ($cb, $app, $param, $tmpl) = @_;
+    my $version = MT->version_number;
+    return 1 if ($version < 5.1);
     return 1
       if ((($app->param('__mode') || '') ne 'list') || (($app->param('_type') || '') ne 'asset'));
 

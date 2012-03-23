@@ -19,3 +19,4 @@ Asset Handler which provides two crucial features that should make using assets 
 + http://plugins.movalog.com/asset-handler/
 + https://github.com/arvind/movabletype-asshat
 + https://github.com/jayallen/mt-plugin-assethandler
+

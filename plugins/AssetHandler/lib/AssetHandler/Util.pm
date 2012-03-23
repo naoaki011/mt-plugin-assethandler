@@ -22,11 +22,10 @@ sub is_mt5 {
 }
 sub is_illiad {
     my $version = MT->version_number;
-    if ($version >= 5.1) {
+    if (($version < 5.2)&&($version >= 5.1)) {
         return 1;
     }
 }
-
 sub is_image {
     my $file = shift;
     my $basename = File::Basename::basename( $file );

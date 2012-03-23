@@ -1,6 +1,6 @@
 # Asset Handler
 
-This version of Asset Handler is compatible with Movable Type 5.0 and later.
+This version of Asset Handler is compatible with Movable Type 4.0 and later.(offcourse including MT5.0x and MT5.1x.)
 
 Movable Type 4.0 introduced a file manager like system dubbed "Assets" which listed files that had been uploaded through MT and allowed you to easily add them to entries or pages. But, what about files you have already uploaded? They don't show up in the asset listing screens and the only way you can have them appear is to re-upload them.
 

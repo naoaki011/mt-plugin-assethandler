@@ -35,77 +35,6 @@ applications:
           label: Import Assets
           mode: asset_import
           condition: $AssetHandler::AssetHandler::Util::is_blog_context
-    list_actions:
-      asset:
-        batch_editor:
-          label: Batch Edit Assets
-          code: $AssetHandler::AssetHandler::App::CMS::open_batch_editor
-          order: 200
-          permission: edit_assets
-          condition: $AssetHandler::AssetHandler::Util::is_mt5
-          no_prompt: 1
-        unlink:
-          label: Unlink
-          code: $AssetHandler::AssetHandler::App::CMS::unlink_asset
-          order: 200
-          permission: edit_assets
-          condition: $AssetHandler::AssetHandler::Util::is_mt5
-          js_message: delete
-        fix_path_tor:
-          label: FullPath to %r
-          code: $AssetHandler::AssetHandler::App::CMS::path_tor
-          order: 310
-          permission: edit_assets
-          condition: $AssetHandler::AssetHandler::Util::is_blog_context
-          js_message: edit
-        fix_path_tofull:
-          label: Flatten Path
-          code: $AssetHandler::AssetHandler::App::CMS::flatten_path
-          order: 320
-          permission: edit_assets
-          condition: $AssetHandler::AssetHandler::Util::is_blog_context
-          js_message: edit
-        fix_url:
-          label: Fix wrong URL from Path
-          code: $AssetHandler::AssetHandler::App::CMS::fix_url
-          order: 330
-          permission: edit_assets
-          condition: $AssetHandler::AssetHandler::Util::is_blog_context
-          js_message: edit
-        modify_path:
-          label: Modify File Path
-          code: $AssetHandler::AssetHandler::App::CMS::modify_path
-          order: 340
-          permission: edit_assets
-          condition: $AssetHandler::AssetHandler::Util::is_blog_context
-          input: 1
-          input_label: 'Specify a folder relative to the blog site path/URL to modify the selected asset(s) path to. Examples: enter a single folder ("assets/"), enter a subdirectory path ("my/asset/location/"), or modify assets to the blog root with "/".'
-          no_prompt: 1
-        move_assets:
-          label: Move Assets
-          code: $AssetHandler::AssetHandler::App::CMS::move_assets
-          order: 350
-          permission: upload
-          condition: $AssetHandler::AssetHandler::Util::is_blog_context
-          input: 1
-          input_label: 'Specify a folder relative to the blog site path/URL to move the selected asset(s) to. Examples: enter a single folder ("assets/"), enter a subdirectory path ("my/asset/location/"), or move assets to the blog root with "/".'
-          no_prompt: 1
-        rename_assets:
-          label: Rename Assets
-          code: $AssetHandler::AssetHandler::App::CMS::rename_assets
-          order: 360
-          permission: upload
-          condition: $AssetHandler::AssetHandler::Util::is_blog_context
-          input: 1
-          input_label: 'Specify a filename to rename the selected asset(s) to. Examples: examples.jpg or examples.'
-          no_prompt: 1
-        fix_datas:
-          label: Fix AssetDatas
-          code: $AssetHandler::AssetHandler::App::CMS::fix_datas
-          order: 370
-          permission: edit_assets
-          condition: $AssetHandler::AssetHandler::Util::is_blog_context
-          js_message: edit
     methods:
       asset_batch_editor: $AssetHandler::AssetHandler::App::CMS::open_batch_editor
       save_assets: $AssetHandler::AssetHandler::App::CMS::save_assets
@@ -134,21 +63,77 @@ system_filters:
       order: 1000
 list_actions:
   asset:
-    unlink:
-      label: Unlink
-      code: $AssetHandler::AssetHandler::App::CMS::unlink_asset
-      condition: $AssetHandler::AssetHandler::Util::is_blog_context
-      order: 200
-      button: 1
-      permission: upload
     batch_editor:
       label: Batch Edit
       code: $AssetHandler::AssetHandler::App::CMS::open_batch_editor
-      condition: $AssetHandler::AssetHandler::Util::is_blog_context
-      order: 300
+      order: 200
       no_prompt: 1
       button: 1
       permission: edit_assets
+      condition: $AssetHandler::AssetHandler::Util::is_blog_context
+    unlink:
+      label: Unlink
+      code: $AssetHandler::AssetHandler::App::CMS::unlink_asset
+      order: 300
+      button: 1
+      permission: edit_assets
+      condition: $AssetHandler::AssetHandler::Util::is_blog_context
+      js_message: delete
+    fix_path_tor:
+      label: FullPath to %r
+      code: $AssetHandler::AssetHandler::App::CMS::path_tor
+      order: 310
+      permission: edit_assets
+      condition: $AssetHandler::AssetHandler::Util::is_blog_context
+      js_message: edit
+    fix_path_tofull:
+      label: Flatten Path
+      code: $AssetHandler::AssetHandler::App::CMS::flatten_path
+      order: 320
+      permission: edit_assets
+      condition: $AssetHandler::AssetHandler::Util::is_blog_context
+      js_message: edit
+    fix_url:
+      label: Fix wrong URL from Path
+      code: $AssetHandler::AssetHandler::App::CMS::fix_url
+      order: 330
+      permission: edit_assets
+      condition: $AssetHandler::AssetHandler::Util::is_blog_context
+      js_message: edit
+    modify_path:
+      label: Modify File Path
+      code: $AssetHandler::AssetHandler::App::CMS::modify_path
+      order: 340
+      permission: edit_assets
+      condition: $AssetHandler::AssetHandler::Util::is_blog_context
+      input: 1
+      input_label: 'Specify a folder relative to the blog site path/URL to modify the selected asset(s) path to. Examples: enter a single folder ("assets/"), enter a subdirectory path ("my/asset/location/"), or modify assets to the blog root with "/".'
+      no_prompt: 1
+    move_assets:
+      label: Move Assets
+      code: $AssetHandler::AssetHandler::App::CMS::move_assets
+      order: 350
+      permission: upload
+      condition: $AssetHandler::AssetHandler::Util::is_blog_context
+      input: 1
+      input_label: 'Specify a folder relative to the blog site path/URL to move the selected asset(s) to. Examples: enter a single folder ("assets/"), enter a subdirectory path ("my/asset/location/"), or move assets to the blog root with "/".'
+      no_prompt: 1
+    rename_assets:
+      label: Rename Assets
+      code: $AssetHandler::AssetHandler::App::CMS::rename_assets
+      order: 360
+      permission: upload
+      condition: $AssetHandler::AssetHandler::Util::is_blog_context
+      input: 1
+      input_label: 'Specify a filename to rename the selected asset(s) to. Examples: examples.jpg or examples.'
+      no_prompt: 1
+    fix_datas:
+      label: Fix AssetDatas
+      code: $AssetHandler::AssetHandler::App::CMS::fix_datas
+      order: 370
+      permission: edit_assets
+      condition: $AssetHandler::AssetHandler::Util::is_blog_context
+      js_message: edit
 list_properties:
   asset:
     label:

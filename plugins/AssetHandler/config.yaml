@@ -410,6 +410,11 @@ list_properties:
       display: optional
       order: 600
       label: Description
+      raw: >
+        sub {
+          my ( $prop, $obj ) = @_;
+          return (length($obj->description) > 28) ? substr($obj->description, 0, 28).'...' : $obj->description;
+        }
     mime_type:
       auto: 1
       display: optional

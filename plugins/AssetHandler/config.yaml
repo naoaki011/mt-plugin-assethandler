@@ -263,17 +263,41 @@ list_properties:
               }
             }
             else {
-              my $img
-                = MT->static_path
-                . 'images/asset/'
-                . $class_type
-                . '-warning-45.png';
-              push @rows, qq{
-                <span class="title"><a href="$edit_link">$label</a></span>$userpic_sticker<span class="view">&nbsp;<a href="$url"><img src="$view_img" alt="$view" /></a></span>
-                <div class="file-type missing picture small">
-                  <img alt="$class_type" src="$img" class="asset-type-icon asset-type-$class_type" />
-                </div>
-              };
+              if ( $class_type =~ /^(image|audio|video|file)$/ ) {
+                my $img
+                  = MT->static_path
+                  . 'images/asset/'
+                  . $class_type
+                  . '-warning-45.png';
+                  push @rows, qq{
+                    <span class="title"><a href="$edit_link">$label</a></span>$userpic_sticker<span class="view">&nbsp;<a href="$url"><img src="$view_img" alt="$view" /></a></span>
+                    <div class="file-type missing picture small">
+                      <img alt="$class_type" src="$img" class="asset-type-icon asset-type-$class_type" />
+                    </div>
+                  };
+              }
+              else {
+                if (($obj->has_thumbnail)&&($obj->thumbnail_url(Width=>45,Height=>45))) {
+                  my $thumbnail_url = $obj->thumbnail_url(Width=>45,Height=>45);
+                  push @rows, qq{
+                    <span class="title"><a href="$edit_link">$label</a></span>$userpic_sticker<span class="view">&nbsp;<a href="$url"><img src="$view_img" alt="$view" /></a></span>
+                    <div class="thumbnail picture small">
+                      <img alt="" src="$thumbnail_url" class="asset-type-icon asset-type-$class_type" />
+                    </div>
+                  };
+                }
+                else {
+                  my $img
+                    = MT->static_path
+                    . 'images/asset/file-warning-45.png';
+                  push @rows, qq{
+                    <span class="title"><a href="$edit_link">$label</a></span>$userpic_sticker<span class="view">&nbsp;<a href="$url"><img src="$view_img" alt="$view" /></a></span>
+                    <div class="file-type missing picture small">
+                      <img alt="$class_type" src="$img" class="asset-type-icon asset-type-$class_type" />
+                    </div>
+                  };
+                }
+              }
             }
           }
           @rows;

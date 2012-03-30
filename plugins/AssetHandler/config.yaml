@@ -392,7 +392,7 @@ list_properties:
       sub_fields:
         -
           class: created_time
-          label: Created Time
+          label: <__trans_section component='AssetHandler'><__trans phrase='Created Time'></__trans_section>
           display: optional
       html: >
         sub {
@@ -414,7 +414,7 @@ list_properties:
       sub_fields:
         -
           class: modified_time
-          label: Modified Time
+          label: <__trans_section component='AssetHandler'><__trans phrase='Modified Time'></__trans_section>
           display: optional
       html: >
         sub {

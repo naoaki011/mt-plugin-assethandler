@@ -76,6 +76,11 @@ sub open_batch_editor {
             }
             else {
                 $row->{asset_has_no_file} = 1;
+                if ($obj->has_thumbnail) {
+                    my ($thumb_file) = $obj->thumbnail_url( Height => 240, Width => 240 );
+                    $row->{thumbnail_url} = $meta->{thumbnail_url} = $thumb_file;
+                }
+                $row->{asset_class} = $obj->class_label;
             }
         }
         if ( my $by = $obj->created_by ) {

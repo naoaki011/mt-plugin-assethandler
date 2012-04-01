@@ -525,43 +525,48 @@ list_properties:
           # create bulk html
           my @rows;
           for my $asset (@$assets) {
-            my $html;
-            my @classes = keys %{$asset_obj_ids{$asset->id}};
-            for (my $i = 0; $i < scalar(@classes); $i++) {
-              my $class = $classes[$i];
-              $html = '<ul>' if (!$i);
-              my @obj_ids = keys %{$asset_obj_ids{$asset->id}->{$class}};
-              for my $obj_id (@obj_ids) {
-                my $obj = $class_objs{$class}->{$obj_id};
-                $html .= '<li class="assoc-' . $obj->class . '">';
-                my $url = $app->uri(
-                  mode => 'view',
-                  args => {
-                    '_type' => $obj->class,
-                    'id' => $obj->id,
-                    ($obj->has_column('blog_id'))
-                      ? ('blog_id' => $obj->blog_id)
-                      : (),
-                  },
-                );
-                my $has_label = 0;
-                for my $label_col qw( name title label ) {
-                  if ($obj->has_column($label_col)) {
-                    if ($obj->column($label_col)) {
-                      $html .= '<a href="' . $url . '" title="(' . $obj->class_label . ')' . $obj->column($label_col) . '">' . $obj->column($label_col) . '</a>';
-                      $has_label = 1;
-                      last;
+            if ($asset->parent) {
+              push @rows, '<span class="is_tumbnail">-</span>';
+            }
+            else {
+              my $html;
+              my @classes = keys %{$asset_obj_ids{$asset->id}};
+              for (my $i = 0; $i < scalar(@classes); $i++) {
+                my $class = $classes[$i];
+                $html = '<ul>' if (!$i);
+                my @obj_ids = keys %{$asset_obj_ids{$asset->id}->{$class}};
+                for my $obj_id (@obj_ids) {
+                  my $obj = $class_objs{$class}->{$obj_id};
+                  $html .= '<li class="assoc-' . $obj->class . '">';
+                  my $url = $app->uri(
+                    mode => 'view',
+                    args => {
+                      '_type' => $obj->class,
+                      'id' => $obj->id,
+                      ($obj->has_column('blog_id'))
+                        ? ('blog_id' => $obj->blog_id)
+                        : (),
+                    },
+                  );
+                  my $has_label = 0;
+                  for my $label_col qw( name title label ) {
+                    if ($obj->has_column($label_col)) {
+                      if ($obj->column($label_col)) {
+                        $html .= '<a href="' . $url . '" title="(' . $obj->class_label . ')' . $obj->column($label_col) . '">' . $obj->column($label_col) . '</a>';
+                        $has_label = 1;
+                        last;
+                      }
                     }
                   }
+                  if (!$has_label) {
+                    $html .= '(' . $obj->class_label . ')<a href="' . $url . '" title="(' . $obj->class_label . ')' . $obj->id . '">ID:' . $obj->id . '</a>';
+                  }
+                  $html .= '</li>';
                 }
-                if (!$has_label) {
-                  $html .= '(' . $obj->class_label . ')<a href="' . $url . '" title="(' . $obj->class_label . ')' . $obj->id . '">ID:' . $obj->id . '</a>';
-                }
-                $html .= '</li>';
+                $html .= '</ul>' if ($i == scalar(@classes) - 1);
               }
-              $html .= '</ul>' if ($i == scalar(@classes) - 1);
+              push @rows, ($html) ? $html : '<span class="hint">This asset has not been used.</span>';
             }
-            push @rows, ($html) ? $html : '-';
           }
           return @rows;
         }

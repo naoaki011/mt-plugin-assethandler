@@ -529,25 +529,64 @@ sub print_transport_progress {
 sub cb_asset_table {
     my ($cb, $app, $tmpl) = @_;
     if (MT->version_number < 5) {
-    
+        return if (MT->version_number < 4.25);
+
+        my $old = <<HERE;
+<th id="as-created-on"><__trans phrase="Created On"></th>
+HERE
+        $old = quotemeta($old);
+        my $new = <<HERE;
+<th id="as-created-on"><__trans phrase="Created On"></th>
+<th id="as-appears-in"><__trans phrase="Appears in..."></th>
+<th id="as-folder"><__trans phrase="Folder"></th>
+HERE
+        $$tmpl =~ s/$old/$new/;
+
+        $old = <<HERE;
+                <td class="si status-view"><mt:if name="url"><a href="<mt:var name="url">" target="view_uploaded" title="<__trans phrase="View">"><img src="<mt:var name="static_uri">images/spacer.gif" alt="<__trans phrase="View">" width="13" height="9" /></a><mt:else>&nbsp;</mt:if></td>
+HERE
+        $old = quotemeta($old);
+        $new = <<HERE;
+                <td class="si">
+<mt:if name="appears_in">
+  <mt:loop name="appears_in">
+    <mt:if name="__first__">
+                    <ul>
+    </mt:if>
+                        <li><a href="<mt:var name="script_url">?__mode=edit&amp;_type=<mt:var name="class">&amp;blog_id=<mt:var name="blog_id" escape="url">&amp;id=<mt:var name="id" escape="url">" class="icon-left icon-<mt:var name="class" lower_case="1">"><mt:var name="title" escape="html" default="..."></a></li>
+    <mt:if name="__last__">
+                    </ul>
+    </mt:if>
+  </mt:loop>
+  <mt:if name="appears_in_more">
+                    <p><a href="<mt:var name="script_url">?__mode=list_entry&amp;blog_id=<mt:var name="blog_id" escape="url">&amp;filter=asset_id&amp;filter_val=<mt:var name="id" escape="url">"><__trans phrase="Show all entries"></a></p>
+                    <p><a href="<mt:var name="script_url">?__mode=list_page&amp;blog_id=<mt:var name="blog_id" escape="url">&amp;filter=asset_id&amp;filter_val=<mt:var name="id" escape="url">"><__trans phrase="Show all pages"></a></p>
+  </mt:if>
+<mt:else>
+  <mt:if name="is_thumbnail">
+                    <span class="is_tumbnail">-</span>
+  <mt:else>
+                    <span class="hint"><__trans phrase="This asset has not been used."></span>
+  </mt:if>
+</mt:if>
+                </td>
+                <td class="si"><mt:var name="folder" /></td>
+                <td class="si status-view"><mt:if name="url"><a href="<mt:var name="url">" target="view_uploaded" title="<__trans phrase="View">"><img src="<mt:var name="static_uri">images/spacer.gif" alt="<__trans phrase="View">" width="13" height="9" /></a><mt:else>&nbsp;</mt:if></td>
+HERE
+        $$tmpl =~ s/$old/$new/;
     }
     else {
         return if (MT->version_number >= 5.1);
+
         my $old = <<HERE;
                 <th class="created-on"><__trans phrase="Created On"></th>
-            </tr>
-        </mt:setvarblock>
 HERE
         $old = quotemeta($old);
-
         my $new = <<HERE;
                 <th class="created-on"><__trans phrase="Created On"></th>
-                <th class="created-on"><__trans phrase="Appears in..."></th>
-                <th class="created-on"><__trans phrase="Folder"></th>
-            </tr>
-        </mt:setvarblock>
+                <th class="appears-in"><__trans phrase="Appears in..."></th>
+                <th class="folder"><__trans phrase="Folder"></th>
 HERE
-
         $$tmpl =~ s/$old/$new/;
 
         $old = <<HERE;
@@ -556,37 +595,35 @@ HERE
         </tbody>
 HERE
         $old = quotemeta($old);
-
         $new = <<HERE;
                 <td>
-    <mt:if name="appears_in">
-        <mt:loop name="appears_in">
-        <mt:if name="__first__">
-        <ul>
-        </mt:if>
-            <li><a href="<mt:var name="script_url">?__mode=edit&amp;_type=<mt:var name="class">&amp;blog_id=<mt:var name="blog_id" escape="url">&amp;id=<mt:var name="id" escape="url">" class="icon-left icon-<mt:var name="class" lower_case="1">"><mt:var name="title" escape="html" default="..."></a></li>
-        <mt:if name="__last__">
-        </ul>
-        </mt:if>
-        </mt:loop>
-        <mt:if name="appears_in_more">
-        <p><a href="<mt:var name="script_url">?__mode=list_entry&amp;blog_id=<mt:var name="blog_id" escape="url">&amp;filter=asset_id&amp;filter_val=<mt:var name="id" escape="url">"><__trans phrase="Show all entries"></a></p>
-        <p><a href="<mt:var name="script_url">?__mode=list_page&amp;blog_id=<mt:var name="blog_id" escape="url">&amp;filter=asset_id&amp;filter_val=<mt:var name="id" escape="url">"><__trans phrase="Show all pages"></a></p>
-        </mt:if>
-    <mt:else>
-        <mt:if name="is_thumbnail">
-        <span class="is_tumbnail">-</span>
-        <mt:else>
-        <span class="hint"><__trans phrase="This asset has not been used."></span>
-        </mt:if>
+<mt:if name="appears_in">
+  <mt:loop name="appears_in">
+    <mt:if name="__first__">
+                    <ul>
     </mt:if>
+                        <li><a href="<mt:var name="script_url">?__mode=edit&amp;_type=<mt:var name="class">&amp;blog_id=<mt:var name="blog_id" escape="url">&amp;id=<mt:var name="id" escape="url">" class="icon-left icon-<mt:var name="class" lower_case="1">"><mt:var name="title" escape="html" default="..."></a></li>
+    <mt:if name="__last__">
+                    </ul>
+    </mt:if>
+  </mt:loop>
+  <mt:if name="appears_in_more">
+                    <p><a href="<mt:var name="script_url">?__mode=list_entry&amp;blog_id=<mt:var name="blog_id" escape="url">&amp;filter=asset_id&amp;filter_val=<mt:var name="id" escape="url">"><__trans phrase="Show all entries"></a></p>
+                    <p><a href="<mt:var name="script_url">?__mode=list_page&amp;blog_id=<mt:var name="blog_id" escape="url">&amp;filter=asset_id&amp;filter_val=<mt:var name="id" escape="url">"><__trans phrase="Show all pages"></a></p>
+  </mt:if>
+<mt:else>
+  <mt:if name="is_thumbnail">
+                    <span class="is_tumbnail">-</span>
+  <mt:else>
+                    <span class="hint"><__trans phrase="This asset has not been used."></span>
+  </mt:if>
+</mt:if>
                 </td>
                 <td><mt:var name="folder" /></td>
             </tr>
     <mt:if __last__>
         </tbody>
 HERE
-
         $$tmpl =~ s/$old/$new/;
     }
 }
@@ -595,7 +632,113 @@ sub cb_list_asset_pre_listing {
     my ($cb, $app, $terms, $args, $param, $hasher) = @_;
 
     if (MT->version_number < 5) {
-    
+        if (MT->version_number >= 4.25) {
+            my $site_path = $app->blog->site_path;
+
+            require File::Basename;
+            require JSON;
+            my %blogs;
+            $$hasher = sub {
+                my ( $obj, $row, %param ) = @_;
+                my $meta = $obj->metadata;
+
+                $row->{id} = $obj->id;
+                my $blog = $blogs{ $obj->blog_id } ||= $obj->blog;
+                $row->{blog_name} = $blog ? $blog->name : '-';
+                $row->{url} = $obj->url;
+                $row->{asset_type} = $obj->class_type;
+                $row->{asset_class_label} = $obj->class_label;
+                my $file_path = $obj->file_path;
+                if ($file_path) {
+                    $row->{file_path} = $file_path;
+                    $row->{file_name} = File::Basename::basename( $file_path );
+
+                    my $filename = File::Basename::basename( $file_path );
+                    (my $tmp = $file_path) =~ s!^(.*)[/\\]$filename$!$1!;
+                    $tmp =~ s!\\!/!g;
+                    $site_path =~ s!\\!/!g;
+                    $tmp =~ s!^$site_path(.*)$!$1!;
+                    $tmp .= '/' if ($tmp);
+                    $row->{folder} = $tmp;
+                }
+                $row->{file_label} = $row->{label} = $obj->label || $row->{file_name} || $app->translate('Untitled');
+
+                if ($obj->has_thumbnail) { 
+                    $row->{has_thumbnail} = 1;
+                    my $height = 75;
+                    my $width  = 75;
+
+                    my $square = 1;
+                    @$meta{qw( thumbnail_url thumbnail_width thumbnail_height )}
+                        = $obj->thumbnail_url(
+                          Height => $height,
+                          Width  => $width,
+                        );
+                    $meta->{thumbnail_width_offset}
+                        = int( ( $width - $meta->{thumbnail_width} ) / 2 );
+                    $meta->{thumbnail_height_offset}
+                        = int( ( $height - $meta->{thumbnail_height} ) / 2 );
+                }
+                else {
+                    $row->{has_thumbnail} = 0;
+                }
+                $row->{is_thumbnail} = $obj->parent ? 1 : 0;
+                my @appears_in;
+                my $place_iter = $app->model('objectasset')->load_iter(
+                    {
+                        blog_id => $obj->blog_id || 0,
+                        asset_id => $obj->id
+                    }
+                );
+                while (my $place = $place_iter->()) {
+                    my $entry_class = $app->model($place->object_ds) or next;
+                    next unless $entry_class->isa('MT::Entry');
+                    my $entry = $entry_class->load($place->object_id)
+                        or next;
+                    my %entry_data = (
+                        id    => $place->object_id,
+                        class => $entry->class_type,
+                        entry => $entry,
+                        title => $entry->title,
+                    );
+                    if (my $ts = $entry->authored_on) {
+                        $entry_data{authored_on_ts} = $ts;
+                        $entry_data{authored_on_formatted} =
+                          format_ts( MT::App::CMS::LISTING_DATETIME_FORMAT(), $ts, undef,
+                            $app->user ? $app->user->preferred_language : undef );
+                    }
+                    if (my $ts = $entry->created_on) {
+                        $entry_data{created_on_ts} = $ts;
+                        $entry_data{created_on_formatted} =
+                          format_ts( MT::App::CMS::LISTING_DATETIME_FORMAT(), $ts, undef,
+                            $app->user ? $app->user->preferred_language : undef );
+                    }
+                    push @appears_in, \%entry_data;
+                }
+                if (4 == @appears_in) {    
+                    pop @appears_in;
+                    $row->{appears_in_more} = 1;
+                }
+                $row->{appears_in} = \@appears_in if @appears_in;
+                my $ts = $obj->created_on;
+                if ( my $by = $obj->created_by ) {
+                    my $user = MT::Author->load($by);
+                    $row->{created_by} = $user ? $user->name : $app->translate('(user deleted)');
+                }
+                if ($ts) {
+                    $row->{created_on_formatted} =
+                      format_ts( MT::App::CMS::LISTING_DATE_FORMAT(), $ts, $blog, $app->user ? $app->user->preferred_language : undef );
+                    $row->{created_on_time_formatted} =
+                      format_ts( MT::App::CMS::LISTING_TIMESTAMP_FORMAT(), $ts, $blog, $app->user ? $app->user->preferred_language : undef );
+                    $row->{created_on_relative} = relative_date( $ts, time, $blog );
+                }
+                @$row{keys %$meta} = values %$meta;
+                $row->{metadata_json} = MT::Util::to_json($meta);
+                $row;
+            };
+        }
+        else {
+        }
     }
     else {
         return if (MT->version_number >= 5.1);

@@ -9,7 +9,7 @@ name: AssetHandler
 key: AssetHandler
 id: AssetHandler
 l10n_class: AssetHandler::L10N
-version: 2.03
+version: 2.04
 author_name: naoaki.onozaki
 author_link: http://www.zelazny.mydns.jp/
 plugin_link: https://github.com/naoaki011/mt-plugin-assethandler

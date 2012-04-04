@@ -50,6 +50,7 @@ use vars qw( %Lexicon );
 	'Category Basename:' => 'カテゴリーベースネーム:',
 	'Modified On' => '修正日',
 	'FileSize' => 'ファイルサイズ',
+	'This asset has not been used.' => 'アイテムは利用されていません。',
 );
 
 1;

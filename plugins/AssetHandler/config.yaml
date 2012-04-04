@@ -522,6 +522,7 @@ list_properties:
             my %cur_class_objs = map { $_->id => $_ } @cur_class_objs;
             $class_objs{$class} = \%cur_class_objs;
           }
+          my $plugin = MT->component('AssetHandler');
           # create bulk html
           my @rows;
           for my $asset (@$assets) {
@@ -565,7 +566,7 @@ list_properties:
                 }
                 $html .= '</ul>' if ($i == scalar(@classes) - 1);
               }
-              push @rows, ($html) ? $html : '<span class="hint">This asset has not been used.</span>';
+              push @rows, ($html) ? $html : '<span class="hint">' . $plugin->translate('This asset has not been used.') . '</span>';
             }
           }
           return @rows;

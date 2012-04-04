@@ -528,6 +528,8 @@ sub print_transport_progress {
 
 sub cb_asset_table {
     my ($cb, $app, $tmpl) = @_;
+    my $enable = MT::ConfigMgr->instance->EnableAdditionalListing || 0;
+    return unless $enable;
     if (MT->version_number < 5) {
         return if (MT->version_number < 4.25);
 
@@ -630,7 +632,8 @@ HERE
 
 sub cb_list_asset_pre_listing {
     my ($cb, $app, $terms, $args, $param, $hasher) = @_;
-
+    my $enable = MT::ConfigMgr->instance->EnableAdditionalListing || 0;
+    return unless $enable;
     if (MT->version_number < 5) {
         if (MT->version_number >= 4.25) {
             my $site_path = $app->blog->site_path;

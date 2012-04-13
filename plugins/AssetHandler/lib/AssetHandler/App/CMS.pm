@@ -113,6 +113,8 @@ sub open_batch_editor {
         $row->{tags} = $tags;
         $row->{asset_type} = ($obj->class || '');
     };
+    my $return_args = (MT->version_number >= 5.1) ? '__mode=list&_type=asset&blog_id='
+                                                  : '__mode=list_asset&blog_id=';
     return $app->listing( {
             terms => { id => \@ids, blog_id => $blog_id },
             args => { sort => 'created_on', direction => 'descend' },
@@ -122,7 +124,7 @@ sub open_batch_editor {
                 blog_id      => $blog_id,
                 edit_blog_id => $blog_id,
                 saved => $app->param('saved') || 0,
-                return_args => "__mode=list&_type=asset&blog_id=$blog_id"
+                return_args => $return_args  . $blog_id
             },
             code => $hasher
     });

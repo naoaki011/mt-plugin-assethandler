@@ -9,7 +9,7 @@ name: AssetHandler
 key: AssetHandler
 id: AssetHandler
 l10n_class: AssetHandler::L10N
-version: 2.04
+version: 2.041
 author_name: naoaki.onozaki
 author_link: http://www.zelazny.mydns.jp/
 plugin_link: https://github.com/naoaki011/mt-plugin-assethandler
@@ -48,7 +48,7 @@ applications:
         label: Import
         order: 300
         mode: asset_import
-        condition: $AssetHandler::AssetHandler::Util::is_illiad
+        condition: $AssetHandler::AssetHandler::Util::is_post_illiad
         permission: upload
         view:
           - website

@@ -2,14 +2,14 @@
 # Copyright (c) 2007, Arvind Satyanarayan.
 # This program is distributed under the terms of the
 # GNU General Public License, version 2.
-# $Id$
+#
 ### Modified for MT5.1 or Later
 # By. Naoaki Onozaki
 name: AssetHandler
 key: AssetHandler
 id: AssetHandler
 l10n_class: AssetHandler::L10N
-version: 2.041
+version: 2.042
 author_name: naoaki.onozaki
 author_link: http://www.zelazny.mydns.jp/
 plugin_link: https://github.com/naoaki011/mt-plugin-assethandler
@@ -348,6 +348,36 @@ list_properties:
           };
           return $out;
         }
+      terms: >
+        sub {
+          my $prop = shift;
+          my ( $args, $db_terms, $db_args ) = @_;
+          my $option = $args->{option};
+          my $query  = quotemeta $args->{string};
+          require MT::Asset;
+          my @assets = MT::Asset->load( $db_terms, $db_args ) or return;
+          my @filtered_assets;
+          if ( 'contains' eq $option ) {
+            @filtered_assets = grep { $_->url =~ m/$query/ } @assets;
+          }
+          elsif ( 'not_contains' eq $option ) {
+            @filtered_assets = grep { $_->url !~ m/$query/ } @assets;
+          }
+          elsif ( 'beginning' eq $option ) {
+            @filtered_assets = grep { $_->url =~ m/^$query/ } @assets;
+          }
+          elsif ( 'end' eq $option ) {
+            @filtered_assets = grep { $_->url =~ m/$query$/ } @assets;
+          }
+          elsif ( 'equal' eq $option ) {
+            @filtered_assets = grep { $_->url =~ m/^$query$/ } @assets;
+          }
+          if ( !@filtered_assets ) {
+            return +{ id => \'IS NULL' };
+          }
+          my @ids = map { $_->id } @filtered_assets;
+          return +{ id => \@ids };
+        }
     file_path:
       auto: 1
       order: 400
@@ -356,7 +386,7 @@ list_properties:
         sub {
           my ($prop, $obj, $app) = @_;
           my $path = $obj->file_path;
-          $path =~ s{\\}{/}g;
+          #$path =~ s{\\}{/}g;
           my $url = $obj->url;
           my $view = MT->translate('View');
           my $view_img = MT->static_path . 'images/status_icons/view.gif';
@@ -365,11 +395,42 @@ list_properties:
           };
           return $out;
         }
+      terms: >
+        sub {
+          my $prop = shift;
+          my ( $args, $db_terms, $db_args ) = @_;
+          my $option = $args->{option};
+          my $query  = quotemeta $args->{string};
+          require MT::Asset;
+          my @assets = MT::Asset->load( $db_terms, $db_args ) or return;
+          my @filtered_assets;
+          if ( 'contains' eq $option ) {
+            @filtered_assets = grep { $_->file_path =~ m/$query/ } @assets;
+          }
+          elsif ( 'not_contains' eq $option ) {
+            @filtered_assets = grep { $_->file_path !~ m/$query/ } @assets;
+          }
+          elsif ( 'beginning' eq $option ) {
+            @filtered_assets = grep { $_->file_path =~ m/^$query/ } @assets;
+          }
+          elsif ( 'end' eq $option ) {
+            @filtered_assets = grep { $_->file_path =~ m/$query$/ } @assets;
+          }
+          elsif ( 'equal' eq $option ) {
+            @filtered_assets = grep { $_->file_path =~ m/^$query$/ } @assets;
+          }
+          if ( !@filtered_assets ) {
+            return +{ id => \'IS NULL' };
+          }
+          my @ids = map { $_->id } @filtered_assets;
+          return +{ id => \@ids };
+        }
     folder:
       auto: 1
       base: __virtual.string
       order: 410
       label: Folder
+      filter_editable: 0
       html: >
         sub {
           my ($prop, $obj, $app) = @_;

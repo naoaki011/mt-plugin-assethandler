@@ -22,7 +22,7 @@ sub is_mt5 {
 }
 sub is_post_illiad {
     my $version = MT->version_number;
-    if (($version < 6.1)&&($version >= 5.1)) {
+    if (($version < 7)&&($version >= 5.1)) {
         return 1;
     }
 }
